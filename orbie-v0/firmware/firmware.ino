@@ -38,8 +38,6 @@ private:
   
   // Training parameters
   int episode_count;
-  int max_episodes;
-  float total_reward;
   
   // IMU variables
   float current_heading;
@@ -52,7 +50,6 @@ private:
   int human_reward;
   float human_reward_sum; // TODO: make this work for holding button down for a while
   bool query_requested;
-  unsigned long last_action_time;
   unsigned long feedback_wait_start;
   const unsigned long ACTION_DELAY = 2000;        // 2 seconds between actions
   const unsigned long FEEDBACK_TIMEOUT = 300000;  // 5 minutes (300,000 ms) for feedback
@@ -68,12 +65,9 @@ public:
     current_state = 0;
     current_action = 0;
     episode_count = 0;
-    max_episodes = 100;
-    total_reward = 0.0;
     human_reward = 0;
     human_reward_sum = 0.0;
     query_requested = false;
-    last_action_time = 0;
     feedback_wait_start = 0;
     last_button_state = false;
     last_button_press_time = 0;
@@ -288,7 +282,6 @@ public:
     Serial.println("Resetting training...");
     initializeQTable();
     episode_count = 0;
-    total_reward = 0.0;
     
     // Reset servos to down
     controller.setRightServo(R_SERVO_MIN_ANGLE);
@@ -301,11 +294,6 @@ public:
   // Run one learning step
   void runLearningStep() {
     unsigned long current_time = millis();
-    
-    // Check if enough time has passed since last action
-    if (current_time - last_action_time < ACTION_DELAY) {
-      return;
-    }
     
     // Read current IMU state
     float current_heading_degrees = readHeading();
@@ -331,7 +319,6 @@ public:
     controller.setLed(false);
 
     // Update episode statistics
-    total_reward += human_reward;
     human_reward = 0;
     episode_count++;
     
@@ -356,8 +343,7 @@ public:
     last_state = current_state;
     current_action = current_action;
     
-    // Update last action time and start feedback timer
-    last_action_time = current_time;
+    // Start feedback timer
     feedback_wait_start = current_time;
     
     Serial.println("F");
@@ -394,15 +380,8 @@ public:
     Serial.print("E");
     Serial.print(episode_count);
     Serial.print("R");
-    Serial.print(total_reward);
     Serial.print("H");
     Serial.print(human_reward_sum);
-    Serial.print("A");
-    if (episode_count > 0) {
-      Serial.println(total_reward / episode_count, 1);
-    } else {
-      Serial.println("0");
-    }
     
     // State and history
     Serial.print("S");
