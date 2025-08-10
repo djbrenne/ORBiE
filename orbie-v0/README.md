@@ -6,7 +6,7 @@ ORBiE is an **O**ttonomous **R**obot **Born** **i**n **E**dmonton. Pronouns he/s
 
 Properly, ORBiE is more a noophyte than a robot&mdash;at least at the time of this writing.
 
-> **noophyte** *(n.) (NEW-ah-fite):* a form of life whose origin is thought; an idea; a story; a memory; a plan.
+> **noophyte** *(n.) (NEW-ah-fite):* a form of life whose major substance is thought; an idea; a story; a memory; a plan.
 
 # ORBiE v0
 
@@ -19,23 +19,29 @@ Orbie v0 will be the first robot instantiation of ORBiE. It<sup>1</sup> will hav
 
 | Feature | ORBiE v0 | ORBiE vX |
 |---------|----------|-------|
+| **Physical Structure** | | |
+| 18" height | ❌ | ✅ |
 | Two cute flippers, actuated for flapping | ✅ | ✅ |
 | A cute round head with embedded interaction sensor | ✅ | ✅ |
-| RGB LED animated eyes glowing softly through the face | ✅ | ✅ |
-| Self-balancing in upright position under perturbations | ✅ | ✅ |
-| Wireless, portable operation with continuous operation during charge | ✅ | ✅ |
-| Inherently safe for unanticipated interaction modes | ✅ | ✅ |
-| Simple harmonic motion (SHM) based Expressivity | ✅ | ✅ |
+| **Sensing & Perception** | | |
 | Geo-magnetic orientation sensing | ✅ | ✅ |
-| Continuously learning, with persistent memory between power cycles | ❓| ✅ |
-| 18" height | ❌ | ✅ |
-| Ability to independently locomote | ❌ | ✅ |
-| Ability to hop up stairs | ❌ | ✅ |
-| Independent charge sequence initiation | ❌ | ✅ |
 | Battery charge level indication | ✅ | ✅ |
 | Vision | ❌ | ✅ |
 | Audition | ❌ | ✅ |
 | Proprioception | ❌ | ✅ |
+| **Action, Movement & Locomotion** | | |
+| RGB LED animated eyes glowing softly through the face | ✅ | ✅ |
+| Self-balancing in upright position under perturbations | ✅ | ✅ |
+| Simple harmonic motion (SHM) based Expressivity | ✅ | ✅ |
+| Ability to independently locomote | ❌ | ✅ |
+| Ability to hop up stairs | ❌ | ✅ |
+| **Power & Operation** | | |
+| Wireless, portable operation with continuous operation during charge | ✅ | ✅ |
+| Independent charge sequence initiation | ❌ | ✅ |
+| **Safety & Reliability** | | |
+| Inherently safe for unanticipated interaction modes | ✅ | ✅ |
+| **Intelligence & Learning** | | |
+| Continuously learning, with persistent memory between power cycles | ❓| ✅ |
 
 
 *As implied above, this README.md was drafted before construction. Inevitably, time constraints will render some of these planned features infeasible for v0.*
