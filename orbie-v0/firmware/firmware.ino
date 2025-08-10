@@ -71,6 +71,11 @@ public:
     last_button_state = false;
     last_button_press_time = 0;
     
+    // Initialize heading history to prevent random memory values
+    heading_history[0] = 0;
+    heading_history[1] = 0;
+    heading_history[2] = 0;
+    
     // Initialize Q-table with small random values
     randomSeed(analogRead(0));
     initializeQTable();
