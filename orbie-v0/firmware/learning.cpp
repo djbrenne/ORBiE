@@ -382,7 +382,8 @@ void QLearningOrbie::checkHumanFeedback() {
                 human_reward_sum += 1;
                 Serial.println("+1 reward added");
                 break;
-            case '2':
+            case 'q':
+            case 'Q':
                 query_requested = true;
                 Serial.println("Query requested");
                 break;
