@@ -10,7 +10,7 @@ An art happening.
 
 ## Repository Details
 
-Within `road-bot-v0` lies the firmware for a robot designed specifically for this kind of road trip.
+Within `orbie-v0` lies the firmware for a robot designed specifically for this kind of road trip.
 
 ## License
 
