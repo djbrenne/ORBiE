@@ -369,6 +369,8 @@ public:
   void printStats() {
     Serial.print("HRSum:");
     Serial.print(human_reward_sum);
+    Serial.print("HRScaled:");
+    Serial.println(scaleHumanRewardSum(human_reward_sum));
     
     // State and history
     Serial.print("S:");
