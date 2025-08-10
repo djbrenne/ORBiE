@@ -348,7 +348,17 @@ void QLearningOrbie::resetTraining() {
   float QLearningOrbie::scaleHumanRewardSum(float reward_sum) {
     // Use sigmoid function to scale between 0-1
     // This provides smooth scaling and handles any positive value
-    return 1.0 / (1.0 + exp(-reward_sum + 1.0));
+    float result = 1.0 / (1.0 + exp(-reward_sum + 1.0));
+    
+    // Debug output
+    Serial.print("DEBUG: reward_sum=");
+    Serial.print(reward_sum, 4);
+    Serial.print(", exp_term=");
+    Serial.print(exp(-reward_sum + 1.0), 4);
+    Serial.print(", result=");
+    Serial.println(result, 4);
+    
+    return result;
   }
   
   // Alternative: Simple linear scaling with a maximum cap
@@ -367,10 +377,16 @@ void QLearningOrbie::resetTraining() {
 void QLearningOrbie::checkHumanFeedback() {
     if (Serial.available()) {
         char input = Serial.read();
+        Serial.print("DEBUG: Received input '");
+        Serial.print(input);
+        Serial.print("', current reward_sum: ");
+        Serial.println(human_reward_sum, 4);
+        
         switch (input) {
             case '1':
                 human_reward_sum += 1;
-                Serial.println("+1");
+                Serial.print("+1, new reward_sum: ");
+                Serial.println(human_reward_sum, 4);
                 break;
             case '2':
                 query_requested = true;
@@ -390,6 +406,17 @@ void QLearningOrbie::checkHumanFeedback() {
                 break;
         }
     }
+}
+
+// Check for button press
+void QLearningOrbie::checkButtonPress() {
+    while (digitalRead(BUTTON_PIN) == LOW) {
+        // while button is HIGH, increment the reward sum continuously
+        human_reward_sum += 0.01;
+        delay(10);
+    }
+    Serial.print("Button released! Total reward_sum: ");
+    Serial.println(human_reward_sum, 4);
 }
 
 // Check if feedback timeout has occurred

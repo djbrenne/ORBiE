@@ -41,7 +41,7 @@ private:
     int last_state;
     
     // Human feedback variables
-    int human_reward;
+    float human_reward;
     float human_reward_sum; // TODO: make this work for holding button down for a while
     bool query_requested;
     unsigned long feedback_wait_start;
@@ -63,6 +63,7 @@ public:
     
     // Human feedback functions
     void checkHumanFeedback();
+    void checkButtonPress();
     bool checkFeedbackTimeout();
     
     // Utility functions

@@ -39,6 +39,7 @@ void loop() {
   
   // Check for human feedback
   q_agent.checkHumanFeedback();
+  q_agent.checkButtonPress();
   
   // Check for feedback timeout
   q_agent.checkFeedbackTimeout();
