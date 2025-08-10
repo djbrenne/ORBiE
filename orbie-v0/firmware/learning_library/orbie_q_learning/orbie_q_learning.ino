@@ -15,16 +15,17 @@
 
 #include <Wire.h>
 
-class QLearningMagnetometer {
+class QLearningOrbie {
 private:
   // Q-learning parameters
-  const int NUM_ACTIONS = 3;        // left, right, forward
-  const int NUM_STATES = 8;         // 8 compass directions (45° intervals)
-  const float LEARNING_RATE = 0.1;
-  const float DISCOUNT_FACTOR = 0.9;
-  const float EPSILON = 0.2;        // Exploration rate
+  const int NUM_ACTIONS = 3; // go straight forward, turn left, turn right
+  // 64 states with s_t = [s_t, s_t-1, s_t-2]
+  const int NUM_STATES = 64; 
+  const float LEARNING_RATE = 0.2;
+  const float DISCOUNT_FACTOR = 0.8;
+  const float EPSILON = 0.3;        // Exploration rate
   
-  // Q-table (8 states x 3 actions)
+  // Q-table (24 states x 3 actions)
   int8_t q_table[NUM_STATES][NUM_ACTIONS];
   
   // Current state and action
@@ -39,11 +40,16 @@ private:
   // Magnetometer variables
   int magnetometer_address;
   float current_heading;
+
+  // History variables
+  int heading_history[3]; // [s_t, s_t-1, s_t-2]
   int last_state;
   
   // Human feedback variables
   int human_reward;
+  float human_reward_sum; // TODO: make this work for holding button down for a while
   bool reward_received;
+  bool query_requested;
   unsigned long last_action_time;
   unsigned long feedback_wait_start;
   const unsigned long ACTION_DELAY = 2000;        // 2 seconds between actions
@@ -51,14 +57,16 @@ private:
   
 public:
   // Constructor
-  QLearningMagnetometer() {
+  QLearningOrbie() {
     current_state = 0;
     current_action = 0;
     episode_count = 0;
     max_episodes = 100;
     total_reward = 0.0;
     human_reward = 0;
+    human_reward_sum = 0.0;
     reward_received = false;
+    query_requested = false;
     last_action_time = 0;
     feedback_wait_start = 0;
     
@@ -114,18 +122,40 @@ public:
     return 0.0;
   }
   
-  // Convert compass heading to discrete state (8 states)
+  // Convert compass heading to discrete N, E, S, W state 
   int headingToState(float heading) {
-    // Divide 360° into 8 states of 45° each
-    int state = (int)(heading / 45.0) % NUM_STATES;
-
     // 4 states (90° intervals)
-    // int state = (int)(heading / 90.0) % 4;  // N, E, S, W
-    // // 16 states (22.5° intervals)  
-    // int state = (int)(heading / 22.5) % 16; 
-    // // 12 states (30° intervals)
-    // int state = (int)(heading / 30.0) % 12;
+      // 0 = North (0° to 89.9°)
+      // 1 = East (90° to 179.9°)
+      // 2 = South (180° to 269.9°)
+      // 3 = West (270° to 359.9°)
+    int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
+
+    // Update heading history
+    heading_history[0] = heading_history[1];
+    heading_history[1] = heading_history[2];
+    heading_history[2] = current_heading;
+
+    // Calculate state
+    int state = heading_history[0] * 16 + heading_history[1] * 4 + heading_history[2];
+
     return state;
+  }
+
+  void updateHeadingHistory(int new_heading) {
+    new_heading = (int)(new_heading / 90.0) % 4;
+    // Shift history: [2] <- [1], [1] <- [0], [0] <- new
+    heading_history[2] = heading_history[1];
+    heading_history[1] = heading_history[0];
+    heading_history[0] = new_heading;
+    
+    // Handle first 3 episodes where history isn't complete
+    if (episode_count < 3) {
+      // Fill missing history slots with current heading
+      for (int i = episode_count; i < 3; i++) {
+        heading_history[i] = new_heading;
+      }
+    }
   }
   
   // Initialize Q-table with small random values
@@ -165,25 +195,29 @@ public:
   
   // Execute action and get new state
   int executeAction(int action) {
+    // TODO: add a function to execute the action; raising arms of the robot
     Serial.print("Executing action: ");
     switch (action) {
       case 0:
-        Serial.println("LEFT");
-        // Simulate turning left (state decreases by 1, wrapping around)
+        Serial.println("FORWARD");
+        // Do not take the next turn, keep going straight forward
         break;
       case 1:
-        Serial.println("RIGHT");
-        // Simulate turning right (state increases by 1, wrapping around)
+        Serial.println("LEFT");
+        // Take the next left turn
         break;
       case 2:
-        Serial.println("FORWARD");
-        // Forward doesn't change compass direction
+        Serial.println("RIGHT");
+        // Take the next right turn
         break;
     }
     
     // Read new magnetometer state
     float new_heading = readMagnetometer();
     int new_state = headingToState(new_heading);
+    
+    // Update heading history with new direction
+    updateHeadingHistory(new_heading);
     
     Serial.print("Heading: ");
     Serial.print(new_heading, 1);
@@ -211,6 +245,7 @@ public:
     float new_q = current_q + LEARNING_RATE * (reward + DISCOUNT_FACTOR * max_next_q - current_q);
     
     // Store back in Q-table (scaled by 10)
+    // This is for arduino optimization purposes, as the q_table is an int8_t array (storing floats in memory is expensive)
     q_table[state][action] = constrain(new_q * 10, -127, 127);
   }
   
@@ -219,22 +254,21 @@ public:
     if (Serial.available()) {
       char input = Serial.read();
       switch (input) {
-        case '-':
-        case '1':
-          human_reward = -1;
-          reward_received = true;
-          Serial.println("Reward: -1 (Bad)");
-          break;
         case '0':
           human_reward = 0;
           reward_received = true;
           Serial.println("Reward: 0 (Neutral)");
           break;
-        case '+':
-        case '2':
+        case '1':
           human_reward = 1;
           reward_received = true;
           Serial.println("Reward: +1 (Good)");
+          break;
+        case '2':
+          // TODO: change this to grab whatever has been sent as the reward up to this point
+          human_reward = 0;
+          query_requested = true;
+          Serial.println("Requesting query: 2");
           break;
         case 's':
         case 'S':
@@ -252,10 +286,11 @@ public:
   
   // Check if feedback timeout has occurred
   bool checkFeedbackTimeout() {
-    if (!reward_received && (millis() - feedback_wait_start) >= FEEDBACK_TIMEOUT) {
+    // TODO: change so learning only triggers if the user has double clicked the button to query for a new action
+    if (!query_requested && (millis() - feedback_wait_start) >= FEEDBACK_TIMEOUT) {
       // Auto-assign neutral reward after 5 minutes
       human_reward = 0;
-      reward_received = true;
+      query_requested = true;
       Serial.println("Feedback timeout! Auto-assigning neutral reward (0)");
       return true;
     }
@@ -280,16 +315,19 @@ public:
     }
     
     // Read current magnetometer state
-    current_heading = readMagnetometer();
-    current_state = headingToState(current_heading);
+    float current_heading_degrees = readMagnetometer();
+    current_state = headingToState(current_heading_degrees);
+    
+    // Update heading history with new reading
+    updateHeadingHistory(current_heading_degrees);
     
     // Only proceed if we have a reward from previous action
-    if (reward_received) {
+    if (query_requested) {
       // Update Q-value with previous state-action-reward
       updateQValue(last_state, current_action, human_reward, current_state);
       
       // Reset reward flag
-      reward_received = false;
+      query_requested = false;
       
       // Update episode statistics
       total_reward += human_reward;
@@ -324,9 +362,9 @@ public:
     
     // Prompt for human feedback
     Serial.println("Please provide feedback:");
-    Serial.println("- or 1: Bad (-1)");
     Serial.println("0: Neutral (0)");
-    Serial.println("+ or 2: Good (+1)");
+    Serial.println("1: Good (+1)");
+    Serial.println("2: Query request for new action");
     Serial.println("s: Show Q-table");
     Serial.println("r: Reset training");
     Serial.println("(Auto-assigns 0 after 5 minutes)");
@@ -374,7 +412,7 @@ public:
   
   // Get remaining time for feedback
   unsigned long getRemainingFeedbackTime() {
-    if (reward_received) return 0;
+    if (query_requested) return 0;
     unsigned long elapsed = millis() - feedback_wait_start;
     if (elapsed >= FEEDBACK_TIMEOUT) return 0;
     return FEEDBACK_TIMEOUT - elapsed;
@@ -398,28 +436,33 @@ public:
   bool hasReward() {
     return reward_received;
   }
+
+  // Check if we have a query request to process
+  bool hasQueryRequest() {
+    return query_requested;
+  }
 };
 
 // Global Q-learning instance
-QLearningMagnetometer q_agent;
+QLearningOrbie q_agent;
 
 void setup() {
   Serial.begin(9600);
   delay(1000);
   
   Serial.println("=== Q-Learning with Magnetometer ===");
-  Serial.println("Actions: 0=Left, 1=Right, 2=Forward");
-  Serial.println("States: 8 compass directions (45° intervals)");
-  Serial.println("Rewards: Human feedback (-1, 0, +1)");
+  Serial.println("Actions: 0=Forward, 1=Left, 2=Right");
+  Serial.println("States: 4 compass directions with 2 additional history states");
+  Serial.println("Rewards: Human feedback (0, +1)");
   Serial.println("Auto-assigns neutral reward (0) after 5 minutes");
   Serial.print("Memory usage: ");
   Serial.print(q_agent.getMemoryUsage());
   Serial.println(" bytes");
   
   Serial.println("\nCommands:");
-  Serial.println("- or 1: Bad action (-1)");
   Serial.println("0: Neutral action (0)");
-  Serial.println("+ or 2: Good action (+1)");
+  Serial.println("1: Good action (+1)");
+  Serial.println("2: Query request for new action");
   Serial.println("s: Show Q-table");
   Serial.println("r: Reset training");
   
@@ -435,8 +478,11 @@ void loop() {
   
   // Process learning step if reward is available
   if (q_agent.hasReward()) {
+    // TODO: only run learning step if (a) the time out has been reached, 
+    // or (b) the user has double clicked the button to query for a new action
     q_agent.runLearningStep();
   } else {
+    // TODO: If there is only 30 seconds left, let's trigger an action animation agitation!
     // Just wait and show countdown
     static unsigned long last_countdown = 0;
     if (millis() - last_countdown >= 30000) {
