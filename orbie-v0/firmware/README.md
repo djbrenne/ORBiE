@@ -23,7 +23,7 @@ firmware/
 
 ## Main Loop Architecture
 
-The main loop follows a **state machine pattern** with **non-blocking timing** to ensure responsive interactions while maintaining expressive animations.
+The main loop follows a **state machine pattern** with **non-blocking timing** to ensure responsive interactions while maintaining expressive animations. The device is usually idle, but occasionally enters a learning state where it updates its learning parameters based on reward collected while idle, and chooses a new action. The interval between each learning step may take an arbitrary amount of time up to `MAX_ACTION_INTERVAL`, and is initiated either by a human query or an internal timer.
 
 ### Core Components
 
@@ -32,8 +32,13 @@ The main loop follows a **state machine pattern** with **non-blocking timing** t
 void setup() {
     // Initialize hardware
     beginHardware();
-    // Take initial random action
-    takeAction(type=RANDOM_ACTION);
+    // Initialize learning parameters
+    s_t, w = beginLearning();
+    reward = 0;
+    // Choose initial action
+    action = chooseAction(s_t, w);
+    // Take initial action
+    takeAction(action);
 }
 
 // Main loop structure
@@ -41,37 +46,35 @@ void loop() {
     unsigned long currentTime = millis();
     
     // 1. Sensor Reading (every cycle)
-    readSensors();
+    int direction = readSensors();
     
-    // 2. Determine whether the human is querying ORBiE
-    bool is_query = checkQuery();
+    // 2. Button Handling (every cycle) - blocks until button release
+    struct ButtonResult result = checkButton();
+    bool is_query = result.is_query;
+    reward += result.press_duration;
     
     // 3. Animation System (non-blocking)
     updateAnimations(currentTime);
 
-    // 4. State Machine Update (every cycle)
-    machine_state = updateStateMachine(currentTime, next_action_time);
+    // 4. State Machine Update (every cycle) - handles timing checks for unprompted actions
+    int machine_state = updateStateMachine(currentTime, next_action_time);
     
     // 5. Learning and Acting System (for both queries and unprompted actions)
-    bool should_act = (is_query || (machine_state == LEARNING && currentTime >= next_action_time));
+    bool should_act = (is_query || (machine_state == LEARNING));
     
     if (should_act) {
-        observeReward(); // Assign the sum duration of all head pats since last action to the last action
-        updateLearning();
-        representState(is_query); // What direction are you facing? Is this a query answer or unprompted action?
-        takeAction(type=EPSILON_GREEDY); // Choose epsilon-greedy (or other type) of action
+        animate(THINKING); // Must be non-blocking
+        w = updateLearning(reward); // Assign all reward since the last action to the last action
+        reward = 0; // Re-initialize reward counter
+        s_t = representState(is_query); // What direction are you facing? Is this a query answer or unprompted action?
+        action = chooseAction(s_t, w); // Choose epsilon-greedy (or other type) of action
+        takeAction(action); 
         last_action_time = currentTime;
-        
-        if (!is_query) {
-            // Only schedule next unprompted action if this wasn't a query
-            next_action_time = currentTime + random(MIN_ACTION_INTERVAL, MAX_ACTION_INTERVAL);
-        }
+        // Whether unprompted or queried action, reset the next unprompted action to some random future time
+        next_action_time = currentTime + random(MIN_ACTION_INTERVAL, MAX_ACTION_INTERVAL);
     }
     
-    // 6. Actuator Output (every cycle)
-    updateActuators();
-    
-    // 7. Safety & System Health (periodic)
+    // 6. Safety & System Health (periodic)
     if (currentTime - lastHealthCheck >= HEALTH_CHECK_INTERVAL) {
         checkSystemHealth();
         lastHealthCheck = currentTime;
@@ -81,10 +84,9 @@ void loop() {
 
 ### State Machine States
 
-1. **IDLE** - Default expressive state with gentle animations
-2. **LEARNING** - Taking an action and observing the result
-3. **SLEEP** - Low-power mode when inactive
-4. **ERROR** - Safe state when issues detected
+1. **IDLE** - Default expressive state, responsive to queries
+2. **LEARNING** - Taking an unprompted action and observing the result
+3. **ERROR** - Safe state when issues detected
 
 ### Sensor Integration
 
