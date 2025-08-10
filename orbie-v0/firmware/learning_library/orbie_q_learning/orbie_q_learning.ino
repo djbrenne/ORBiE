@@ -48,7 +48,6 @@ private:
   // Human feedback variables
   int human_reward;
   float human_reward_sum; // TODO: make this work for holding button down for a while
-  bool reward_received;
   bool query_requested;
   unsigned long last_action_time;
   unsigned long feedback_wait_start;
@@ -65,7 +64,6 @@ public:
     total_reward = 0.0;
     human_reward = 0;
     human_reward_sum = 0.0;
-    reward_received = false;
     query_requested = false;
     last_action_time = 0;
     feedback_wait_start = 0;
@@ -132,9 +130,7 @@ public:
     int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
 
     // Update heading history
-    heading_history[0] = heading_history[1];
-    heading_history[1] = heading_history[2];
-    heading_history[2] = current_heading;
+    updateHeadingHistory(current_heading);
 
     // Calculate state
     int state = heading_history[0] * 16 + heading_history[1] * 4 + heading_history[2];
@@ -216,8 +212,8 @@ public:
     float new_heading = readMagnetometer();
     int new_state = headingToState(new_heading);
     
-    // Update heading history with new direction
-    updateHeadingHistory(new_heading);
+    // // Update heading history with new direction
+    // updateHeadingHistory(new_heading);
     
     Serial.print("Heading: ");
     Serial.print(new_heading, 1);
@@ -254,20 +250,13 @@ public:
     if (Serial.available()) {
       char input = Serial.read();
       switch (input) {
-        case '0':
-          human_reward = 0;
-          reward_received = true;
-          Serial.println("Reward: 0 (Neutral)");
-          break;
         case '1':
-          human_reward = 1;
           human_reward_sum += 1;
-          reward_received = true;
-          Serial.println("Reward: +1 (Good)");
+          Serial.println("Reward received: +1 (Good)");
+          Serial.print("Human Reward Sum: ");
+          Serial.println(human_reward_sum);
           break;
         case '2':
-          // TODO: change this to grab whatever has been sent as the reward up to this point
-          human_reward = 0;
           query_requested = true;
           Serial.println("Requesting query: 2");
           break;
@@ -319,36 +308,43 @@ public:
     float current_heading_degrees = readMagnetometer();
     current_state = headingToState(current_heading_degrees);
     
-    // Update heading history with new reading
-    updateHeadingHistory(current_heading_degrees);
-    
-    // Only proceed if we have a reward from previous action
-    if (query_requested) {
-      // Update Q-value with previous state-action-reward
-      updateQValue(last_state, current_action, human_reward, current_state);
-      
-      // Reset reward flag
-      query_requested = false;
-      
-      // Update episode statistics
-      total_reward += human_reward;
-      episode_count++;
-      
-      Serial.print("Episode ");
-      Serial.print(episode_count);
-      Serial.print(": State ");
-      Serial.print(last_state);
-      Serial.print(" -> Action ");
-      Serial.print(current_action);
-      Serial.print(" -> State ");
-      Serial.print(current_state);
-      Serial.print(" -> Reward ");
-      Serial.println(human_reward);
-      
-      // Show time remaining for next feedback
-      Serial.println("Waiting for human feedback... (5 min timeout)");
+    // Update Q-value with previous state-action-reward
+    if (human_reward_sum > 0) {
+      Serial.print("Query requested with Human Reward Sum: ");
+      Serial.println(human_reward_sum);
+      // Scale the reward sum between 0-1
+      human_reward = scaleHumanRewardSum(human_reward_sum);
+      Serial.print("Scaled Reward: ");
+      Serial.println(human_reward, 3);
+      human_reward_sum = 0;
+    } else {
+      human_reward = 0;
     }
+
+    updateQValue(last_state, current_action, human_reward, current_state);
     
+    // Reset reward flag
+    query_requested = false;
+
+    // Update episode statistics
+    total_reward += human_reward;
+    human_reward = 0;
+    episode_count++;
+    
+    Serial.print("Episode ");
+    Serial.print(episode_count);
+    Serial.print(": State ");
+    Serial.print(last_state);
+    Serial.print(" -> Action ");
+    Serial.print(current_action);
+    Serial.print(" -> State ");
+    Serial.print(current_state);
+    Serial.print(" -> Reward ");
+    Serial.println(human_reward);
+    
+    // Show time remaining for next feedback
+    Serial.println("Waiting for human feedback... (5 min timeout)");
+
     // Choose and execute new action
     current_action = chooseAction(current_state);
     int next_state = executeAction(current_action);
@@ -403,6 +399,8 @@ public:
     Serial.print(episode_count);
     Serial.print(", Total Reward: ");
     Serial.print(total_reward);
+    Serial.print(", Human Reward Sum: ");
+    Serial.print(human_reward_sum);
     Serial.print(", Avg Reward: ");
     if (episode_count > 0) {
       Serial.println(total_reward / episode_count, 2);
@@ -433,10 +431,20 @@ public:
     }
   }
 
-  // Check if we have a reward to process
-  bool hasReward() {
-    return reward_received;
+  // Scale human reward sum between 0-1 using sigmoid function
+  float scaleHumanRewardSum(float reward_sum) {
+    // Use sigmoid function to scale between 0-1
+    // This provides smooth scaling and handles any positive value
+    return 1.0 / (1.0 + exp(-reward_sum + 1.0));
   }
+  
+  // Alternative: Simple linear scaling with a maximum cap
+  float scaleHumanRewardSumLinear(float reward_sum, float max_reward = 5.0) {
+    // Cap the maximum reward and scale linearly
+    float capped_reward = min(reward_sum, max_reward);
+    return capped_reward / max_reward;
+  }
+
 
   // Check if we have a query request to process
   bool hasQueryRequest() {
@@ -478,8 +486,8 @@ void loop() {
   q_agent.checkFeedbackTimeout();
   
   // Process learning step if reward is available
-  if (q_agent.hasReward()) {
-    // TODO: only run learning step if (a) the time out has been reached, 
+  if (q_agent.hasQueryRequest()) {
+    // Only run learning step if (a) the time out has been reached, 
     // or (b) the user has double clicked the button to query for a new action
     q_agent.runLearningStep();
   } else {
