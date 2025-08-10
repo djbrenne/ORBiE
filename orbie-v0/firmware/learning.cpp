@@ -90,10 +90,12 @@ int QLearningOrbie::headingToState() {
       // Random action (exploration)
       // TODO: Maybe show this with leds
       Serial.println("Exploring");
+      controller.setLedColor(0, 255, 0);
       return random(NUM_ACTIONS);
     } else {
       // Best action (exploitation)
       Serial.println("Exploiting");
+      controller.setLedColor(255, 0, 0);
       return getBestAction(state);
     }
   }
@@ -165,6 +167,13 @@ int QLearningOrbie::headingToState() {
   
   // Update Q-value using Q-learning formula
   void QLearningOrbie::updateQValue(int state, int action, float reward, int next_state) {
+    // Q-values array
+    Serial.print("Q-values: ");
+    for (int i = 0; i < NUM_ACTIONS; i++) {
+      Serial.print(getQValue(current_state, i));
+      Serial.print(" ");
+    }
+    Serial.println();
     Serial.print("Updating Q-value for state: ");
     Serial.print(state);
     Serial.print(" action: ");
@@ -191,6 +200,13 @@ int QLearningOrbie::headingToState() {
     // Store back in Q-table (scaled by 10, constrained to 4-bit range)
     int8_t scaled_value = constrain(new_q * 10, -7, 7); // 4-bit signed range: -7 to 7
     setQValue(state, action, scaled_value);
+    // Q-values array
+    Serial.print("New Q-values: ");
+    for (int i = 0; i < NUM_ACTIONS; i++) {
+      Serial.print(getQValue(current_state, i));
+      Serial.print(" ");
+    }
+    Serial.println();
   }
 // Reset training
 void QLearningOrbie::resetTraining() {
@@ -209,7 +225,7 @@ void QLearningOrbie::resetTraining() {
   // Run one learning step
   void QLearningOrbie::runLearningStep() {
     unsigned long current_time = millis();
-    
+    Serial.println("LEARNING");
     // Read current IMU state
     float current_heading_degrees = controller.getHeading();
     int current_heading = (int)(current_heading_degrees / 90.0) % 4;  // N, E, S, W
@@ -254,9 +270,8 @@ void QLearningOrbie::resetTraining() {
         current_action = chooseAction(current_state);
         int next_state = executeAction(current_action);
     }
-    // Reset reward flag and turn off LED
+    // Reset reward flag
     query_requested = false;
-    controller.setLed(false);
 
     // Update episode statistics
     human_reward = 0;
@@ -405,10 +420,42 @@ void QLearningOrbie::checkHumanFeedback() {
 
 // Check for button press
 void QLearningOrbie::checkButtonPress() {
-    while (digitalRead(BUTTON_PIN) == LOW) {
-        // while button is HIGH, increment the reward sum continuously
-        human_reward_sum += 0.01;
-        delay(10);
+    bool button_pressed = false;
+    
+    // Check if button is currently pressed
+    if (digitalRead(BUTTON_PIN) == LOW) {
+        button_pressed = true;
+        // While button is pressed, increment reward continuously
+        while (digitalRead(BUTTON_PIN) == LOW) {
+            human_reward_sum += 0.01;
+            delay(10);
+        }
+    }
+    
+    // If button was pressed, check for double click
+    if (button_pressed) {
+        unsigned long button_release_time = millis();
+        bool double_click_detected = false;
+        
+        // Wait for potential second press within DOUBLE_CLICK_TIME
+        while (millis() - button_release_time < DOUBLE_CLICK_TIME) {
+            if (digitalRead(BUTTON_PIN) == LOW) {
+                // Second press detected - wait for it to be released
+                while (digitalRead(BUTTON_PIN) == LOW) {
+                    delay(10);
+                }
+                double_click_detected = true;
+                break;
+            }
+            delay(10); // Small delay to prevent busy waiting
+        }
+        
+        if (double_click_detected) {
+            query_requested = true;
+            Serial.println("Double click detected - requesting new action");
+        } else {
+            Serial.println("Single click - reward added");
+        }
     }
 }
 

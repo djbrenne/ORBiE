@@ -14,7 +14,7 @@
 
 // LED definitions
 #define LED_COUNT 1
-#define LED_BRIGHTNESS 20
+#define LED_BRIGHTNESS 255
 
 // Servo definitions
 #define R_SERVO_MIN_ANGLE 10

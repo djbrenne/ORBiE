@@ -28,9 +28,8 @@ void setup() {
   delay(1000);
   // Initialize hardware
   controller.beginHardware();
-
-  Serial.println("C:1=+,2=Q,s=S,p=P,r=R");
-  
+  controller.setLed(true);
+  controller.setNeutralPosition();  
 }
 
 void loop() {
@@ -59,5 +58,8 @@ void loop() {
     }
   }
   
-  delay(100);
+  delay(500);
+  // set arms to neutral position
+  controller.setNeutralPosition();
+
 } 

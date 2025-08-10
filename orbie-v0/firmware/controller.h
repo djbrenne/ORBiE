@@ -61,6 +61,7 @@ public:
     
     // LED functions
     void setLed(bool state);
+    void setLedColor(int r, int g, int b);
     bool getLedState();
     void toggleLed();
 
@@ -79,6 +80,7 @@ public:
     // Utility functions
     void update();
     void reset();
+    void setNeutralPosition();
 };
 
 #endif // CONTROLLER_H

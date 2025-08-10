@@ -195,3 +195,14 @@ void Controller::reset() {
     // Reset state variables
     buttonPressed = false;
 }
+
+void Controller::setNeutralPosition() {
+    setRightServo(170);
+    setLeftServo(10);
+    setLedColor(255, 255, 255);
+}
+
+void Controller::setLedColor(int r, int g, int b) {
+    leds[0] = CRGB(r, g, b);
+    FastLED.show();
+}
