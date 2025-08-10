@@ -182,17 +182,17 @@ public:
     // TODO: add a function to execute the action; raising arms of the robot
     if (action == 0) {
       // Go forward
-      Serial.println("F");
+      Serial.println("Exec Fwd");
       controller.setRightServo(R_SERVO_MAX_ANGLE);
       controller.setLeftServo(L_SERVO_MAX_ANGLE);
     } else if (action == 1) {
       // Turn left
-      Serial.println("L");
+      Serial.println("Exec Left");
       controller.setRightServo(R_SERVO_MAX_ANGLE);
       controller.setLeftServo(L_SERVO_MIN_ANGLE);
     } else {
       // Turn right
-      Serial.println("R");
+      Serial.println("Exec Right");
       controller.setRightServo(R_SERVO_MIN_ANGLE);
       controller.setLeftServo(L_SERVO_MAX_ANGLE);
     }
@@ -204,9 +204,9 @@ public:
     float new_heading = readHeading();
     int new_state = headingToState(new_heading);
     
-    Serial.print("H");
-    Serial.print(new_heading, 0);
-    Serial.print("S");
+    Serial.print("Action Exec New Heading:");
+    Serial.println(new_heading, 0);
+    Serial.print("NewS:");
     Serial.println(new_state);
     
     return new_state;
@@ -304,8 +304,11 @@ public:
       Serial.println(human_reward_sum);
       // Scale the reward sum between 0-1
       human_reward = scaleHumanRewardSum(human_reward_sum);
+      Serial.print("HRewScaled:");
+      Serial.println(human_reward, 2);
       human_reward_sum = 0;
     } else {
+      Serial.println("No reward");
       human_reward = 0;
     }
     Serial.print("HRew:");
@@ -321,11 +324,11 @@ public:
     episode_count++;
     
     Serial.print("LS:");
-    Serial.print(last_state);
+    Serial.println(last_state);
     Serial.print("CA:");
-    Serial.print(current_action);
+    Serial.println(current_action);
     Serial.print("CS:");
-    Serial.print(current_state);
+    Serial.println(current_state);
     
     // Choose and execute new action
     current_action = chooseAction(current_state);
@@ -368,9 +371,9 @@ public:
   // Get training statistics - ULTRA COMPACT VERSION
   void printStats() {
     Serial.print("HRSum:");
-    Serial.print(human_reward_sum);
+    Serial.println(human_reward_sum, 2);
     Serial.print("HRScaled:");
-    Serial.println(scaleHumanRewardSum(human_reward_sum));
+    Serial.println(scaleHumanRewardSum(human_reward_sum), 2);
     
     // State and history
     Serial.print("S:");
@@ -446,21 +449,11 @@ QLearningOrbie q_agent;
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
   delay(1000);
-  
-  Serial.println("QL");
-  Serial.println("A:0=F,1=L,2=R");
-  Serial.println("S:4dir+2hist");
-  Serial.println("R:0,+1");
-  
   // Initialize hardware
   controller.beginHardware();
-  
-  Serial.print("M");
-  Serial.println(q_agent.getMemoryUsage());
-  
+
   Serial.println("C:1=+,2=Q,s=S,p=P,r=R");
   
-  Serial.println("S");
 }
 
 void loop() {
