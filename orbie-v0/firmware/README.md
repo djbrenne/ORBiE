@@ -21,9 +21,102 @@ firmware/
 └── action-animations.cpp # Animation system implementation
 ```
 
-## Main Loop
+## Main Loop Architecture
 
-TBD
+The main loop follows a **state machine pattern** with **non-blocking timing** to ensure responsive interactions while maintaining expressive animations.
+
+### Core Components
+
+```cpp
+// Setup structure
+void setup() {
+    // Initialize hardware
+    beginHardware();
+    // Take initial random action
+    takeAction(type=RANDOM_ACTION);
+}
+
+// Main loop structure
+void loop() {
+    unsigned long currentTime = millis();
+    
+    // 1. Sensor Reading (every cycle)
+    readSensors();
+    
+    // 2. Determine whether the human is querying ORBiE
+    bool is_query = checkQuery();
+    
+    // 3. Animation System (non-blocking)
+    updateAnimations(currentTime);
+
+    // 4. State Machine Update (every cycle)
+    machine_state = updateStateMachine(currentTime, next_action_time);
+    
+    // 5. Learning and Acting System (for both queries and unprompted actions)
+    bool should_act = (is_query || (machine_state == LEARNING && currentTime >= next_action_time));
+    
+    if (should_act) {
+        observeReward(); // Assign the sum duration of all head pats since last action to the last action
+        updateLearning();
+        representState(is_query); // What direction are you facing? Is this a query answer or unprompted action?
+        takeAction(type=EPSILON_GREEDY); // Choose epsilon-greedy (or other type) of action
+        last_action_time = currentTime;
+        
+        if (!is_query) {
+            // Only schedule next unprompted action if this wasn't a query
+            next_action_time = currentTime + random(MIN_ACTION_INTERVAL, MAX_ACTION_INTERVAL);
+        }
+    }
+    
+    // 6. Actuator Output (every cycle)
+    updateActuators();
+    
+    // 7. Safety & System Health (periodic)
+    if (currentTime - lastHealthCheck >= HEALTH_CHECK_INTERVAL) {
+        checkSystemHealth();
+        lastHealthCheck = currentTime;
+    }
+}
+```
+
+### State Machine States
+
+1. **IDLE** - Default expressive state with gentle animations
+2. **LEARNING** - Taking an action and observing the result
+3. **SLEEP** - Low-power mode when inactive
+4. **ERROR** - Safe state when issues detected
+
+### Sensor Integration
+
+- **Head Button** - Debounced input for reward signals and queries
+- **Magnetometer** - Orientation sensing for expressive behaviors
+- **Battery Monitor** - Power management and status indication
+
+### Animation System
+
+- **LED Eyes** - Blinking, color modulation, brightness control
+- **Flipper Servos** - Expressive gestures, yes/no/dunno responses, idle motion
+
+### Learning Integration
+
+- **State Representation** - Cardinal direction (int, 0-3), Query Available (bool)
+- **Reward Processing** - Head button duration → reward signal (int)
+- **Behavior Adaptation** - Adjusting responses based on learned preferences
+- **Memory Persistence** - SD card logging for cross-power-cycle learning
+
+### Timing Considerations
+
+- **Main Loop**: ~100Hz (10ms cycle time)
+- **Animation Updates**: 30-60Hz for smooth motion
+- **Learning Updates**: 1-5Hz for background processing
+- **Health Checks**: 1Hz for system monitoring
+
+### Safety Features
+
+- **Servo Limits** - Prevent over-rotation and damage
+- **Battery Protection** - Low-power modes and warnings
+- **Error Recovery** - Graceful degradation on sensor failures
+- **Non-blocking Design** - Responsive even during long operations
 
 ## Development Status
 
