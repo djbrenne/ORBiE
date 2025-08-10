@@ -11,29 +11,13 @@
 // Create controller instance
 Controller controller;
 
+
+
 void setup() {
     Serial.begin(SERIAL_BAUD_RATE);
     controller.beginHardware();
 }
 
 void loop() {
-    // Update controller state (IMU data, button state)
     controller.update();
-    
-    // Print magnetometer data
-    Serial.print("Magnetometer: ");
-    Serial.print(controller.getHeading());
-    Serial.print(" ");
-    Serial.print(controller.getPitch());
-    Serial.print(" ");
-    Serial.println(controller.getRoll());
-    
-    // Check for button press
-    if (controller.wasButtonPressed()) {
-        Serial.println("*** BUTTON PRESSED! ***");
-    }
-    
-    // Flash the LED
-    controller.toggleLed();
-    delay(300);  // Small delay to prevent overwhelming the system
 }

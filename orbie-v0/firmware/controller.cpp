@@ -106,13 +106,13 @@ bool Controller::getLedState() {
 
 // Servo functions
 void Controller::setRightServo(int angle) {
-    angle = constrain(angle, 0, 180);  // Limit servo range
+    angle = constrain(angle, R_SERVO_MIN_ANGLE, R_SERVO_MAX_ANGLE);  // Limit servo range
     rightServoAngle = angle;
     rightServo.write(angle);
 }
 
 void Controller::setLeftServo(int angle) {
-    angle = constrain(angle, 0, 180);  // Limit servo range
+    angle = constrain(angle, L_SERVO_MIN_ANGLE, L_SERVO_MAX_ANGLE);  // Limit servo range
     leftServoAngle = angle;
     leftServo.write(angle);
 }
