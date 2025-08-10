@@ -88,22 +88,24 @@ public:
   }
   
   // Convert compass heading to discrete N, E, S, W state 
-  int headingToState(float heading) {
+  int headingToState() {
     // 4 states (90° intervals)
     // 0 = North (0° to 89.9°)
     // 1 = East (90° to 179.9°)
     // 2 = South (180° to 269.9°)
     // 3 = West (270° to 359.9°)
-    int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
-    Serial.print("heading:");
-    Serial.println(heading);
-    Serial.print("heading direction:");
-    Serial.println(current_heading);
+    // int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
+    // Serial.print("heading:");
+    // Serial.println(heading);
+    // Serial.print("heading direction:");
+    // Serial.println(current_heading);
 
-    // Update heading history
-    updateHeadingHistory(current_heading);
 
     // Calculate state
+    Serial.print("heading history:");
+    Serial.println(heading_history[0]);
+    Serial.println(heading_history[1]);
+    Serial.println(heading_history[2]);
     int state = heading_history[0] * 16 + heading_history[1] * 4 + heading_history[2];
     Serial.print("heading state:");
     Serial.println(state);
@@ -112,7 +114,7 @@ public:
   }
 
   void updateHeadingHistory(int new_heading) {
-    new_heading = (int)(new_heading / 90.0) % 4;
+    // new_heading = (int)(new_heading / 90.0) % 4;
     // Shift history: [2] <- [1], [1] <- [0], [0] <- new
     heading_history[2] = heading_history[1];
     heading_history[1] = heading_history[0];
@@ -211,14 +213,17 @@ public:
     // Wait for action to complete
     delay(1000);
     
-    // Read new IMU state
-    float new_heading = readHeading();
-    int new_state = headingToState(new_heading);
+    // // Read new IMU state
+    // float new_heading = readHeading();
+    //  // Update heading history
+    // int current_heading = (int)(new_heading / 90.0) % 4;  // N, E, S, W
+    // updateHeadingHistory(current_heading);
+    // int new_state = headingToState();
     
-    Serial.print("Action Exec New Heading:");
-    Serial.println(new_heading, 0);
-    Serial.print("NewS:");
-    Serial.println(new_state);
+    // Serial.print("Action Exec New Heading:");
+    // Serial.println(new_heading, 0);
+    // Serial.print("NewS:");
+    // Serial.println(new_state);
     
     return new_state;
   }
@@ -307,8 +312,10 @@ public:
     
     // Read current IMU state
     float current_heading_degrees = readHeading();
-    current_state = headingToState(current_heading_degrees);
-    
+    int current_heading = (int)(current_heading_degrees / 90.0) % 4;  // N, E, S, W
+    updateHeadingHistory(current_heading);
+    current_state = headingToState();
+
     // Update Q-value with previous state-action-reward
     if (human_reward_sum > 0) {
       Serial.print("HRSum:");
@@ -409,7 +416,7 @@ public:
     Serial.print("Heading:");
     Serial.println(readHeading(), 0);
     Serial.print("H2S:");
-    Serial.println(headingToState(readHeading()));
+    Serial.println(headingToState());
   }
   
   // Get remaining time for feedback
