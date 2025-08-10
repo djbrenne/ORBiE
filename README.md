@@ -6,7 +6,7 @@ An art happening.
 
 1. Drive responsibly.
 2. Where doing so does not conflict with rule #1, follow the directional instructions of a robot copilot.
-3. Give the robot positive feedback whenever you fancy.
+3. Give the robot positive feedback whenever you fancy. Ask occasional questions if they interest you.
 
 ## Repository Details
 
