@@ -218,7 +218,7 @@ public:
     //  // Update heading history
     // int current_heading = (int)(new_heading / 90.0) % 4;  // N, E, S, W
     // updateHeadingHistory(current_heading);
-    // int new_state = headingToState();
+    int new_state = headingToState();
     
     // Serial.print("Action Exec New Heading:");
     // Serial.println(new_heading, 0);
@@ -309,7 +309,7 @@ public:
   // Run one learning step
   void runLearningStep() {
     unsigned long current_time = millis();
-    
+    Serial.print("IN RUN_LEARNING_STEP");
     // Read current IMU state
     float current_heading_degrees = readHeading();
     int current_heading = (int)(current_heading_degrees / 90.0) % 4;  // N, E, S, W
