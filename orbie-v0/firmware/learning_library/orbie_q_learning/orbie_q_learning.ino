@@ -261,6 +261,7 @@ public:
           break;
         case '1':
           human_reward = 1;
+          human_reward_sum += 1;
           reward_received = true;
           Serial.println("Reward: +1 (Good)");
           break;
