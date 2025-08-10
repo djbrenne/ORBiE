@@ -99,22 +99,20 @@ void executeActionAnimation(int action) {
 }
 
 void updateHappyAnimation() {
+    // If the happy animation is not active, do nothing
     if (!happyAnimationActive) {
-        return; // Do nothing if the animation isn't supposed to be active
+        return;
     }
 
-    // This animation uses a sine wave to create a smooth, continuous "wave" or "dance".
-    float time = millis() / 1000.0; // Get current time in seconds
-    float waveSpeed = 4.0; // Controls how fast the wave motion is. Higher is faster.
+    // Move arms in sine wave opposite to each other
+    float time = millis() / 1000.0;
+    float waveSpeed = 4.0;
     float waveAmplitude = (ARM_UP_POS - ARM_DOWN_POS) / 2.0;
     float waveOffset = ARM_DOWN_POS + waveAmplitude;
 
-    // Calculate the position for the left arm based on the sine wave
     int leftPos = waveOffset + waveAmplitude * sin(waveSpeed * time);
-    // Calculate the right arm's position, making it move opposite to the left arm (phase-shifted by PI)
     int rightPos = waveOffset + waveAmplitude * sin(waveSpeed * time + PI); 
 
-    // Write the calculated positions to the servos
     leftArmServo.write(leftPos);
     rightArmServo.write(rightPos);
 }
