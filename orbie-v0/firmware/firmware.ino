@@ -51,8 +51,7 @@ private:
   float human_reward_sum; // TODO: make this work for holding button down for a while
   bool query_requested;
   unsigned long feedback_wait_start;
-  const unsigned long ACTION_DELAY = 2000;        // 2 seconds between actions
-  const unsigned long FEEDBACK_TIMEOUT = 300000;  // 5 minutes (300,000 ms) for feedback
+  const unsigned long FEEDBACK_TIMEOUT = 60000;  // 5 minutes (300,000 ms) for feedback
   
   // Button state tracking TODO: Double check this works
   bool last_button_state;
@@ -271,7 +270,7 @@ public:
       // Auto-assign neutral reward after 5 minutes
       human_reward = 0;
       query_requested = true;
-      Serial.println("Feedback timeout! Auto-assigning neutral reward (0)");
+      Serial.println("Feedback timeout!");
       return true;
     }
     return false;
@@ -301,17 +300,16 @@ public:
     
     // Update Q-value with previous state-action-reward
     if (human_reward_sum > 0) {
-      Serial.print("Q");
+      Serial.print("HRSum:");
       Serial.println(human_reward_sum);
       // Scale the reward sum between 0-1
       human_reward = scaleHumanRewardSum(human_reward_sum);
-      Serial.print("S");
-      Serial.println(human_reward, 2);
       human_reward_sum = 0;
     } else {
       human_reward = 0;
     }
-
+    Serial.print("HRew:");
+    Serial.println(human_reward, 2);
     updateQValue(last_state, current_action, human_reward, current_state);
     
     // Reset reward flag and turn off LED
@@ -322,19 +320,13 @@ public:
     human_reward = 0;
     episode_count++;
     
-    Serial.print("E");
-    Serial.print(episode_count);
-    Serial.print("S");
+    Serial.print("LS:");
     Serial.print(last_state);
-    Serial.print("A");
+    Serial.print("CA:");
     Serial.print(current_action);
-    Serial.print("S");
+    Serial.print("CS:");
     Serial.print(current_state);
-    Serial.print("R");
-    Serial.println(human_reward);
     
-    Serial.println("W");
-
     // Choose and execute new action
     current_action = chooseAction(current_state);
     int next_state = executeAction(current_action);
@@ -344,9 +336,7 @@ public:
     current_action = current_action;
     
     // Start feedback timer
-    feedback_wait_start = current_time;
-    
-    Serial.println("F");
+    feedback_wait_start = current_time;    
   }
   
   // Print Q-table (for debugging)
@@ -377,14 +367,11 @@ public:
   
   // Get training statistics - ULTRA COMPACT VERSION
   void printStats() {
-    Serial.print("E");
-    Serial.print(episode_count);
-    Serial.print("R");
-    Serial.print("H");
+    Serial.print("HRSum:");
     Serial.print(human_reward_sum);
     
     // State and history
-    Serial.print("S");
+    Serial.print("S:");
     Serial.print(current_state);
     const char* d = "NESW";
     Serial.print(d[heading_history[0]]);
@@ -393,37 +380,20 @@ public:
     
     // Action and Q-value
     const char* a = "FLR";
-    Serial.print("A");
+    Serial.print("A:");
     Serial.print(a[current_action]);
-    Serial.print("Q");
-    Serial.println(getQValue(current_state, current_action));
-    
     // Q-values array
-    Serial.print("Q");
+    Serial.print("QV:");
     for (int i = 0; i < NUM_ACTIONS; i++) {
       Serial.print(getQValue(current_state, i));
     }
     Serial.println();
     
-    // Best action
-    Serial.print("B");
-    Serial.println(a[getBestAction(current_state)]);
-    
-    // Timer
-    unsigned long t = getRemainingFeedbackTime();
-    if (t > 0) {
-      Serial.print("T");
-      Serial.print(t / 60000);
-      Serial.print(":");
-      if ((t % 60000) / 1000 < 10) Serial.print("0");
-      Serial.println((t % 60000) / 1000);
-    } else {
-      Serial.println("TR");
-    }
-    
     // Heading
-    Serial.print("H");
+    Serial.print("Heading:");
     Serial.println(readHeading(), 0);
+    Serial.print("H2S:");
+    Serial.println(headingToState(readHeading()));
   }
   
   // Get remaining time for feedback
