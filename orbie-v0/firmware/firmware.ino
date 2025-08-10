@@ -95,12 +95,18 @@ public:
     // 2 = South (180° to 269.9°)
     // 3 = West (270° to 359.9°)
     int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
+    Serial.print("heading:");
+    Serial.println(heading);
+    Serial.print("heading direction:");
+    Serial.println(current_heading);
 
     // Update heading history
     updateHeadingHistory(current_heading);
 
     // Calculate state
     int state = heading_history[0] * 16 + heading_history[1] * 4 + heading_history[2];
+    Serial.print("heading state:");
+    Serial.println(state);
 
     return state;
   }
