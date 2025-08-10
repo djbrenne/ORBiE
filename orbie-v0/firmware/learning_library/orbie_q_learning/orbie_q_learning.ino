@@ -130,9 +130,7 @@ public:
     int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
 
     // Update heading history
-    heading_history[0] = heading_history[1];
-    heading_history[1] = heading_history[2];
-    heading_history[2] = current_heading;
+    updateHeadingHistory(current_heading);
 
     // Calculate state
     int state = heading_history[0] * 16 + heading_history[1] * 4 + heading_history[2];
@@ -214,8 +212,8 @@ public:
     float new_heading = readMagnetometer();
     int new_state = headingToState(new_heading);
     
-    // Update heading history with new direction
-    updateHeadingHistory(new_heading);
+    // // Update heading history with new direction
+    // updateHeadingHistory(new_heading);
     
     Serial.print("Heading: ");
     Serial.print(new_heading, 1);
@@ -310,49 +308,43 @@ public:
     float current_heading_degrees = readMagnetometer();
     current_state = headingToState(current_heading_degrees);
     
-    // Update heading history with new reading
-    updateHeadingHistory(current_heading_degrees);
-    
-    // Only proceed if we have reached the timeout or the user has requested a new action
-    if (query_requested) {
-      // Update Q-value with previous state-action-reward
-      if (human_reward_sum > 0) {
-        Serial.print("Query requested with Human Reward Sum: ");
-        Serial.println(human_reward_sum);
-        // Scale the reward sum between 0-1
-        human_reward = scaleHumanRewardSum(human_reward_sum);
-        Serial.print("Scaled Reward: ");
-        Serial.println(human_reward, 3);
-        human_reward_sum = 0;
-      } else {
-        human_reward = 0;
-      }
-
-      updateQValue(last_state, current_action, human_reward, current_state);
-      
-      // Reset reward flag
-      query_requested = false;
-
-      // Update episode statistics
-      total_reward += human_reward;
+    // Update Q-value with previous state-action-reward
+    if (human_reward_sum > 0) {
+      Serial.print("Query requested with Human Reward Sum: ");
+      Serial.println(human_reward_sum);
+      // Scale the reward sum between 0-1
+      human_reward = scaleHumanRewardSum(human_reward_sum);
+      Serial.print("Scaled Reward: ");
+      Serial.println(human_reward, 3);
+      human_reward_sum = 0;
+    } else {
       human_reward = 0;
-      episode_count++;
-      
-      Serial.print("Episode ");
-      Serial.print(episode_count);
-      Serial.print(": State ");
-      Serial.print(last_state);
-      Serial.print(" -> Action ");
-      Serial.print(current_action);
-      Serial.print(" -> State ");
-      Serial.print(current_state);
-      Serial.print(" -> Reward ");
-      Serial.println(human_reward);
-      
-      // Show time remaining for next feedback
-      Serial.println("Waiting for human feedback... (5 min timeout)");
     }
+
+    updateQValue(last_state, current_action, human_reward, current_state);
     
+    // Reset reward flag
+    query_requested = false;
+
+    // Update episode statistics
+    total_reward += human_reward;
+    human_reward = 0;
+    episode_count++;
+    
+    Serial.print("Episode ");
+    Serial.print(episode_count);
+    Serial.print(": State ");
+    Serial.print(last_state);
+    Serial.print(" -> Action ");
+    Serial.print(current_action);
+    Serial.print(" -> State ");
+    Serial.print(current_state);
+    Serial.print(" -> Reward ");
+    Serial.println(human_reward);
+    
+    // Show time remaining for next feedback
+    Serial.println("Waiting for human feedback... (5 min timeout)");
+
     // Choose and execute new action
     current_action = chooseAction(current_state);
     int next_state = executeAction(current_action);
