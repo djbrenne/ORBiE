@@ -40,38 +40,34 @@ int QLearningOrbie::headingToState() {
     // 1 = East (90° to 179.9°)
     // 2 = South (180° to 269.9°)
     // 3 = West (270° to 359.9°)
-    // int current_heading = (int)(heading / 90.0) % 4;  // N, E, S, W
-    // Serial.print("heading:");
-    // Serial.println(heading);
-    // Serial.print("heading direction:");
-    // Serial.println(current_heading);
-
-
-    // Calculate state
-    Serial.print("heading history:");
-    Serial.println(heading_history[0]);
-    Serial.println(heading_history[1]);
-    Serial.println(heading_history[2]);
+    
     int state = heading_history[0] * 16 + heading_history[1] * 4 + heading_history[2];
-    Serial.print("heading state:");
-    Serial.println(state);
-
     return state;
-  }
+}
 
   void QLearningOrbie::updateHeadingHistory(int new_heading) {
-    // new_heading = (int)(new_heading / 90.0) % 4;
-    // Shift history: [2] <- [1], [1] <- [0], [0] <- new
-    heading_history[2] = heading_history[1];
-    heading_history[1] = heading_history[0];
-    heading_history[0] = new_heading;
-    
-    // Handle first 3 episodes where history isn't complete
+    // For the first 3 episodes, gradually build up the history
     if (episode_count < 3) {
-      // Fill missing history slots with current heading
-      for (int i = episode_count; i < 3; i++) {
-        heading_history[i] = new_heading;
+      if (episode_count == 0) {
+        // First episode: just set the current heading
+        heading_history[0] = new_heading;
+        // Keep [1] and [2] as 0 (initialized in constructor)
+      } else if (episode_count == 1) {
+        // Second episode: shift and add new heading
+        heading_history[1] = heading_history[0];  // Move last heading to position 1
+        heading_history[0] = new_heading;         // Set new heading at position 0
+        // Keep [2] as 0
+      } else if (episode_count == 2) {
+        // Third episode: shift and add new heading
+        heading_history[2] = heading_history[1];  // Move last heading to position 2
+        heading_history[1] = heading_history[0];  // Move last_last heading to position 1
+        heading_history[0] = new_heading;         // Set new heading at position 0
       }
+    } else {
+      // Normal operation: shift all history and add new heading
+      heading_history[2] = heading_history[1];
+      heading_history[1] = heading_history[0];
+      heading_history[0] = new_heading;
     }
   }
   
@@ -92,9 +88,12 @@ int QLearningOrbie::headingToState() {
   int QLearningOrbie::chooseAction(int state) {
     if (random(100) < (EPSILON * 100)) {
       // Random action (exploration)
+      // TODO: Maybe show this with leds
+      Serial.println("Exploring");
       return random(NUM_ACTIONS);
     } else {
       // Best action (exploitation)
+      Serial.println("Exploiting");
       return getBestAction(state);
     }
   }
@@ -141,41 +140,39 @@ int QLearningOrbie::headingToState() {
     // TODO: add a function to execute the action; raising arms of the robot
     if (action == 0) {
       // Go forward
-      Serial.println("Exec Fwd");
-      controller.setRightServo(R_SERVO_MAX_ANGLE);
-      controller.setLeftServo(L_SERVO_MAX_ANGLE);
+      Serial.println("Keep going straight");
+      controller.setRightServo(90);
+      controller.setLeftServo(90);
     } else if (action == 1) {
       // Turn left
-      Serial.println("Exec Left");
-      controller.setRightServo(R_SERVO_MAX_ANGLE);
-      controller.setLeftServo(L_SERVO_MIN_ANGLE);
+      Serial.println("Take the next left turn");
+      controller.setRightServo(10);
+      controller.setLeftServo(10);
     } else {
       // Turn right
-      Serial.println("Exec Right");
-      controller.setRightServo(R_SERVO_MIN_ANGLE);
-      controller.setLeftServo(L_SERVO_MAX_ANGLE);
+      Serial.println("Take the next right turn");
+      controller.setRightServo(170);
+      controller.setLeftServo(170);
     }
     
     // Wait for action to complete
     delay(1000);
     
-    // // Read new IMU state
-    // float new_heading = readHeading();
-    //  // Update heading history
-    // int current_heading = (int)(new_heading / 90.0) % 4;  // N, E, S, W
-    // updateHeadingHistory(current_heading);
     int new_state = headingToState();
-    
-    // Serial.print("Action Exec New Heading:");
-    // Serial.println(new_heading, 0);
-    // Serial.print("NewS:");
-    // Serial.println(new_state);
     
     return new_state;
   }
   
   // Update Q-value using Q-learning formula
   void QLearningOrbie::updateQValue(int state, int action, float reward, int next_state) {
+    Serial.print("Updating Q-value for state: ");
+    Serial.print(state);
+    Serial.print(" action: ");
+    Serial.print(action);
+    Serial.print(" reward: ");
+    Serial.print(reward);
+    Serial.print(" next_state: ");
+    Serial.println(next_state);
     // Get current Q-value
     float current_q = getQValue(state, action) / 10.0;
     
@@ -212,49 +209,60 @@ void QLearningOrbie::resetTraining() {
   // Run one learning step
   void QLearningOrbie::runLearningStep() {
     unsigned long current_time = millis();
-    Serial.print("IN RUN_LEARNING_STEP");
+    
     // Read current IMU state
     float current_heading_degrees = controller.getHeading();
     int current_heading = (int)(current_heading_degrees / 90.0) % 4;  // N, E, S, W
     updateHeadingHistory(current_heading);
     current_state = headingToState();
 
-    // Update Q-value with previous state-action-reward
-    if (human_reward_sum > 0) {
-      Serial.print("HRSum:");
-      Serial.println(human_reward_sum);
-      // Scale the reward sum between 0-1
-      human_reward = scaleHumanRewardSum(human_reward_sum);
-      Serial.print("HRewScaled:");
-      Serial.println(human_reward, 2);
-      human_reward_sum = 0;
+    // return early if we are in the first 3 episodes as our state will not be valid
+    if (episode_count < 3) {
+      Serial.println("Skipping learning step as we are in the first 3 episodes");
+      Serial.print("Heading History: ");
+      const char* directions = "NESW";
+      Serial.print(directions[heading_history[0]]);
+      Serial.print(directions[heading_history[1]]);
+      Serial.println(directions[heading_history[2]]);
     } else {
-      Serial.println("No reward");
-      human_reward = 0;
+        // Print current status
+        Serial.print("Heading: ");
+        Serial.print(current_heading_degrees, 0);
+        Serial.print("° (");
+        const char* directions = "NESW";
+        Serial.print(directions[current_heading]);
+        Serial.print(") | History: ");
+        Serial.print(directions[heading_history[0]]);
+        Serial.print(directions[heading_history[1]]);
+        Serial.print(directions[heading_history[2]]);
+        Serial.print(" | Reward: ");
+        Serial.print(human_reward_sum, 2);
+
+        // Update Q-value with previous state-action-reward
+        if (human_reward_sum > 0) {
+        human_reward = scaleHumanRewardSum(human_reward_sum);
+        } else {
+        human_reward = 0;
+        }
+        Serial.print(" | Scaled Reward: ");
+        Serial.print(human_reward, 2);
+        Serial.println();   
+
+        updateQValue(last_state, current_action, human_reward, current_state); 
+        
+        // Choose and execute new action
+        current_action = chooseAction(current_state);
+        int next_state = executeAction(current_action);
     }
-    Serial.print("HRew:");
-    Serial.println(human_reward, 2);
-    updateQValue(last_state, current_action, human_reward, current_state);
-    
     // Reset reward flag and turn off LED
     query_requested = false;
     controller.setLed(false);
 
     // Update episode statistics
     human_reward = 0;
+    human_reward_sum = 0;
     episode_count++;
-    
-    Serial.print("LS:");
-    Serial.println(last_state);
-    Serial.print("CA:");
-    Serial.println(current_action);
-    Serial.print("CS:");
-    Serial.println(current_state);
-    
-    // Choose and execute new action
-    current_action = chooseAction(current_state);
-    int next_state = executeAction(current_action);
-    
+
     // Store current state and action for next update
     last_state = current_state;
     current_action = current_action;
@@ -291,14 +299,19 @@ void QLearningOrbie::resetTraining() {
   
   // Get training statistics - ULTRA COMPACT VERSION
   void QLearningOrbie::printStats() {
-    Serial.print("HRSum:");
+    Serial.print("Current human reward: ");
     Serial.println(human_reward_sum, 2);
-    Serial.print("HRScaled:");
+    Serial.print("Human reward scaled: ");
     Serial.println(scaleHumanRewardSum(human_reward_sum), 2);
     
     // State and history
-    Serial.print("S:");
-    Serial.print(current_state);
+    Serial.print("Current heading: ");
+    Serial.println(controller.getHeading(), 0);
+    Serial.print("Heading to state: ");
+    Serial.println(headingToState());
+    Serial.print("Current state: ");
+    Serial.println(current_state);
+    Serial.print("Current heading history :");
     const char* d = "NESW";
     Serial.print(d[heading_history[0]]);
     Serial.print(d[heading_history[1]]);
@@ -306,20 +319,16 @@ void QLearningOrbie::resetTraining() {
     
     // Action and Q-value
     const char* a = "FLR";
-    Serial.print("A:");
-    Serial.print(a[current_action]);
+    Serial.print("Current action: ");
+    Serial.println(a[current_action]);
     // Q-values array
-    Serial.print("QV:");
+    Serial.print("Q-values: ");
     for (int i = 0; i < NUM_ACTIONS; i++) {
       Serial.print(getQValue(current_state, i));
+      Serial.print(" ");
     }
     Serial.println();
     
-    // Heading
-    Serial.print("Heading:");
-    Serial.println(controller.getHeading(), 0);
-    Serial.print("H2S:");
-    Serial.println(headingToState());
   }
   
   // Get remaining time for feedback
@@ -348,17 +357,7 @@ void QLearningOrbie::resetTraining() {
   float QLearningOrbie::scaleHumanRewardSum(float reward_sum) {
     // Use sigmoid function to scale between 0-1
     // This provides smooth scaling and handles any positive value
-    float result = 1.0 / (1.0 + exp(-reward_sum + 1.0));
-    
-    // Debug output
-    Serial.print("DEBUG: reward_sum=");
-    Serial.print(reward_sum, 4);
-    Serial.print(", exp_term=");
-    Serial.print(exp(-reward_sum + 1.0), 4);
-    Serial.print(", result=");
-    Serial.println(result, 4);
-    
-    return result;
+    return 1.0 / (1.0 + exp(-reward_sum + 1.0));
   }
   
   // Alternative: Simple linear scaling with a maximum cap
@@ -377,20 +376,15 @@ void QLearningOrbie::resetTraining() {
 void QLearningOrbie::checkHumanFeedback() {
     if (Serial.available()) {
         char input = Serial.read();
-        Serial.print("DEBUG: Received input '");
-        Serial.print(input);
-        Serial.print("', current reward_sum: ");
-        Serial.println(human_reward_sum, 4);
         
         switch (input) {
             case '1':
                 human_reward_sum += 1;
-                Serial.print("+1, new reward_sum: ");
-                Serial.println(human_reward_sum, 4);
+                Serial.println("+1 reward added");
                 break;
             case '2':
                 query_requested = true;
-                Serial.println("Q");
+                Serial.println("Query requested");
                 break;
             case 's':
             case 'S':
@@ -415,8 +409,6 @@ void QLearningOrbie::checkButtonPress() {
         human_reward_sum += 0.01;
         delay(10);
     }
-    Serial.print("Button released! Total reward_sum: ");
-    Serial.println(human_reward_sum, 4);
 }
 
 // Check if feedback timeout has occurred

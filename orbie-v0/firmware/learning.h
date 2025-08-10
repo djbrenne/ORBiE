@@ -21,7 +21,7 @@ private:
     static const int NUM_STATES = 64; // 64 states with s_t = [s_t, s_t-1, s_t-2]
     const float LEARNING_RATE = 0.2;
     const float DISCOUNT_FACTOR = 0.8;
-    const float EPSILON = 0.3;        // Exploration rate
+    const float EPSILON = 0.7;        // Exploration rate
     
     // Q-table (64 states x 3 actions) - packed into 4-bit values
     uint8_t q_table[NUM_STATES][2]; // 2 bytes per state (3 actions × 4 bits + 4 bits padding)
@@ -45,7 +45,7 @@ private:
     float human_reward_sum; // TODO: make this work for holding button down for a while
     bool query_requested;
     unsigned long feedback_wait_start;
-    const unsigned long FEEDBACK_TIMEOUT = 60000;  // 5 minutes (300,000 ms) for feedback
+    const unsigned long FEEDBACK_TIMEOUT = 10000;  // 5 minutes (300,000 ms) for feedback
     
     // Button state tracking TODO: Double check this works
     bool last_button_state;

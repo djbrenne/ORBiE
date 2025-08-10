@@ -8,6 +8,8 @@
 #ifndef ACTION_ANIMATIONS_H
 #define ACTION_ANIMATIONS_H
 
+#include "controller.h"
+
 enum RobotAction {
     ACTION_FORWARD     = 0,
     ACTION_LEFT        = 1,
@@ -18,8 +20,7 @@ enum RobotAction {
     ACTION_ARMS_DOWN   = 6
 };
 
-void setupArms();
-void executeActionAnimation(int action);
-void updateHappyAnimation();
+void executeActionAnimation(Controller& controller, int action);
+void updateHappyAnimation(Controller& controller);
 
 #endif // ACTION_ANIMATIONS_H
