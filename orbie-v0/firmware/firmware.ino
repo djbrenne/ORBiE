@@ -48,6 +48,7 @@ void loop() {
     // Only run learning step if (a) the time out has been reached, 
     // or (b) the user has double clicked the button to query for a new action
     q_agent.runLearningStep();
+    delay(1000);
   } else {
     // TODO: If there is only 30 seconds left, let's trigger an action animation agitation!
     // Just wait and show countdown
@@ -58,7 +59,7 @@ void loop() {
     }
   }
   
-  delay(500);
+  delay(100);
   // set arms to neutral position
   controller.setNeutralPosition();
 
