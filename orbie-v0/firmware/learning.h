@@ -40,12 +40,11 @@ private:
     int heading_history[3]; // [s_t, s_t-1, s_t-2]
     int last_state;
     
-    // Human feedback variables
+    // Human reward variables
     float human_reward;
-    float human_reward_sum; // TODO: make this work for holding button down for a while
-    bool query_requested;
-    unsigned long feedback_wait_start;
-    const unsigned long FEEDBACK_TIMEOUT = 10000;  // 5 minutes (300,000 ms) for feedback
+    float human_reward_sum;
+    bool impending_action;
+    unsigned long unprompted_action_timer_start;
     
     // Button state tracking (now handled by controller)
     // Removed: last_button_state, last_button_press_time, DOUBLE_CLICK_TIME
@@ -57,10 +56,11 @@ public:
     // Core learning functions
     void runLearningStep();
     void resetTraining();
-    bool hasQueryRequest();
+    bool shouldAct();
+    void collectReward();
     
-    // Human feedback functions
-    void checkHumanFeedback();
+    // Human reward functions
+    void checkDebugRequest();
     void checkButtonPress();
     bool checkUnpromptedActionTimeout();
     
@@ -68,7 +68,7 @@ public:
     void printQTable();
     void printStats();
     void printCountdown();
-    unsigned long getRemainingFeedbackTime();
+    unsigned long getRemainingUnpromptedActionTime();
     int getMemoryUsage();
     
     // State and action functions

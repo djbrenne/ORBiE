@@ -75,9 +75,9 @@ public:
     // Button event detection
     struct ButtonEvent {
         float reward;      // Reward accumulated from button press duration
-        bool query;        // True if double-click detected (query request)
+        bool query;        // True if double-click detected (action request)
     };
-    ButtonEvent checkButtonEvents();  // Returns both reward and query status
+    ButtonEvent checkButtonEvents();  // Returns both reward and action request status
     
     // Servo functions
     void setRightServo(int angle);

@@ -32,39 +32,29 @@ void loop() {
   // Update controller (reads IMU, button, etc.)
   controller.update();
   
-  // Check for human feedback
-  q_agent.checkHumanFeedback();
+  // Check for debug requests
+  q_agent.checkDebugRequest();
+
+  // Check for rewards and action requests
   q_agent.checkButtonPress();
-  
-  // Check for unprompted action timeout
   q_agent.checkUnpromptedActionTimeout();
   
-  // Process learning step if reward is available
-  if (q_agent.hasQueryRequest()) {
-    // Only run learning step if the time out has been reached, 
-    // or the user has double clicked the button to query for a new action,
-    while (controller.isButtonPressed()) {
-      // The user's still giving reward; wait for release
-      delay(50);
-    }
-    delay(DOUBLE_CLICK_TIME + 100); // Give time for pending reward to be assigned
-    q_agent.checkButtonPress(); // Process any remaining reward
-
+  // If it's action time, run learning step
+  if (q_agent.shouldAct()) {
+    // Collect all outstanding rewards
+    q_agent.collectReward();
+    
     // Run learning step
     q_agent.runLearningStep();
+    
+    // Let chosen action animate for a second. TODO: proper animations
     delay(1000);
-  } else {
-    // TODO: If there is only 30 seconds left, let's trigger an action animation agitation!
-    // Just wait and show countdown
-    static unsigned long last_countdown = 0;
-    if (millis() - last_countdown >= 30000) {
-      q_agent.printCountdown();
-      last_countdown = millis();
-    }
   }
-  
-  delay(100);
+
   // set arms to neutral position
   controller.setNeutralPosition();
+
+  // short delay to not overwhelm the controller
+  delay(100);
 
 } 

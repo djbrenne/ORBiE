@@ -7,7 +7,7 @@
 
 #include "learning.h"
 #include <Arduino.h>
-
+#include "config.h"
 // External controller instance (declared in firmware.ino)
 extern Controller controller;
 
@@ -18,8 +18,8 @@ QLearningOrbie::QLearningOrbie() {
     episode_count = 0;
     human_reward = 0;
     human_reward_sum = 0.0;
-    query_requested = false;
-    feedback_wait_start = 0;
+    impending_action = false;
+    unprompted_action_timer_start = 0;
     
     // Initialize heading history to prevent random memory values
     heading_history[0] = 0;
@@ -273,11 +273,11 @@ void QLearningOrbie::resetTraining() {
     last_state = current_state;
     current_action = current_action;
     
-    // Start feedback timer
-    feedback_wait_start = current_time;
+    // Start unprompted action timer
+    unprompted_action_timer_start = current_time;
     
     // Reset reward flag and statistics
-    query_requested = false;
+    impending_action = false;
     human_reward = 0;
     human_reward_sum = 0;
     episode_count++;    
@@ -343,27 +343,27 @@ void QLearningOrbie::resetTraining() {
     
   }
   
-  // Get remaining time for feedback
-  unsigned long QLearningOrbie::getRemainingFeedbackTime() {
-    if (query_requested) return 0;
-    unsigned long elapsed = millis() - feedback_wait_start;
-    if (elapsed >= FEEDBACK_TIMEOUT) return 0;
-    return FEEDBACK_TIMEOUT - elapsed;
-  }
+  // Get remaining time for unprompted action
+unsigned long QLearningOrbie::getRemainingUnpromptedActionTime() {
+    if (impending_action) return 0;
+    unsigned long elapsed = millis() - unprompted_action_timer_start;
+    if (elapsed >= UNPROMPTED_ACTION_TIMEOUT) return 0;
+    return UNPROMPTED_ACTION_TIMEOUT - elapsed;
+}
   
   // Print countdown timer
-  void QLearningOrbie::printCountdown() {
-    unsigned long remaining = getRemainingFeedbackTime();
+void QLearningOrbie::printCountdown() {
+    unsigned long remaining = getRemainingUnpromptedActionTime();
     if (remaining > 0) {
-      unsigned long minutes = remaining / 60000;
-      unsigned long seconds = (remaining % 60000) / 1000;
-      Serial.print("Time remaining: ");
-      Serial.print(minutes);
-      Serial.print(":");
-      if (seconds < 10) Serial.print("0");
-      Serial.println(seconds);
+        unsigned long minutes = remaining / 60000;
+        unsigned long seconds = (remaining % 60000) / 1000;
+        Serial.print("Time remaining: ");
+        Serial.print(minutes);
+        Serial.print(":");
+        if (seconds < 10) Serial.print("0");
+        Serial.println(seconds);
     }
-  }
+}
 
   // Scale human reward sum between 0-1 using sigmoid function
   float QLearningOrbie::scaleHumanRewardSum(float reward_sum) {
@@ -379,13 +379,13 @@ void QLearningOrbie::resetTraining() {
     return capped_reward / max_reward;
   }
 
-  // Check if we have a query request to process
-  bool QLearningOrbie::hasQueryRequest() {
-    return query_requested;
+  // Check if we have an action to process
+  bool QLearningOrbie::shouldAct() {
+    return impending_action;
   }
 
-// Check for human feedback via button
-void QLearningOrbie::checkHumanFeedback() {
+// Check for debug requests via serial
+void QLearningOrbie::checkDebugRequest() {
     if (Serial.available()) {
         char input = Serial.read();
         
@@ -396,8 +396,8 @@ void QLearningOrbie::checkHumanFeedback() {
                 break;
             case 'q':
             case 'Q':
-                query_requested = true;
-                Serial.println("Query requested");
+                impending_action = true;
+                Serial.println("Action requested");
                 break;
             case 's':
             case 'S':
@@ -425,16 +425,25 @@ void QLearningOrbie::checkButtonPress() {
         human_reward_sum += buttonEvent.reward;
     }
     
-    // Set query request if double-click was detected
+    // Set action request if double-click was detected
     if (buttonEvent.query) {
-        query_requested = true;
+        impending_action = true;
     }
+}
+
+void QLearningOrbie::collectReward() {
+    while (controller.isButtonPressed()) {
+        // The user's still giving reward; wait for release
+        delay(50);
+    }
+    delay(DOUBLE_CLICK_TIME + 100); // Give time for pending reward to be assigned
+    checkButtonPress(); // Process any remaining reward
 }
 
 // Check if time for unprompted action
 bool QLearningOrbie::checkUnpromptedActionTimeout() {
-    if (!query_requested && millis() - feedback_wait_start >= UNPROMPTED_ACTION_TIMEOUT) {
-        query_requested = true;
+    if (!impending_action && millis() - unprompted_action_timer_start >= UNPROMPTED_ACTION_TIMEOUT) {
+        impending_action = true;
         Serial.println("Unprompted action timeout!");
         return true;
     }
