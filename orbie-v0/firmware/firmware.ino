@@ -36,14 +36,21 @@ void loop() {
   q_agent.checkHumanFeedback();
   q_agent.checkButtonPress();
   
-  // Check for feedback timeout
-  q_agent.checkFeedbackTimeout();
+  // Check for unprompted action timeout
+  q_agent.checkUnpromptedActionTimeout();
   
   // Process learning step if reward is available
-  if (q_agent.hasQueryRequest() && !controller.isButtonPressed()) {
+  if (q_agent.hasQueryRequest()) {
     // Only run learning step if the time out has been reached, 
     // or the user has double clicked the button to query for a new action,
-    // and the button is not currently being held down (get ALL the rewards!)
+    while (controller.isButtonPressed()) {
+      // The user's still giving reward; wait for release
+      delay(50);
+    }
+    delay(DOUBLE_CLICK_TIME + 100); // Give time for pending reward to be assigned
+    q_agent.checkButtonPress(); // Process any remaining reward
+
+    // Run learning step
     q_agent.runLearningStep();
     delay(1000);
   } else {

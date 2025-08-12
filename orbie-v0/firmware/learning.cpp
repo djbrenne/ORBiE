@@ -268,20 +268,19 @@ void QLearningOrbie::resetTraining() {
         current_action = chooseAction(current_state);
         int next_state = executeAction(current_action);
     }
-    // Reset reward flag
-    query_requested = false;
-
-    // Update episode statistics
-    human_reward = 0;
-    human_reward_sum = 0;
-    episode_count++;
-
+    
     // Store current state and action for next update
     last_state = current_state;
     current_action = current_action;
     
     // Start feedback timer
-    feedback_wait_start = current_time;    
+    feedback_wait_start = current_time;
+    
+    // Reset reward flag and statistics
+    query_requested = false;
+    human_reward = 0;
+    human_reward_sum = 0;
+    episode_count++;    
   }
   
   // Print Q-table (for debugging)
@@ -432,14 +431,11 @@ void QLearningOrbie::checkButtonPress() {
     }
 }
 
-// Check if feedback timeout has occurred
-bool QLearningOrbie::checkFeedbackTimeout() {
-    // TODO: change so learning only triggers if the user has double clicked the button to query for a new action
-    if (!query_requested && (millis() - feedback_wait_start) >= FEEDBACK_TIMEOUT) {
-        // Auto-assign neutral reward after 5 minutes
-        human_reward = 0;
+// Check if time for unprompted action
+bool QLearningOrbie::checkUnpromptedActionTimeout() {
+    if (!query_requested && millis() - feedback_wait_start >= UNPROMPTED_ACTION_TIMEOUT) {
         query_requested = true;
-        Serial.println("Feedback timeout!");
+        Serial.println("Unprompted action timeout!");
         return true;
     }
     return false;

@@ -62,7 +62,7 @@ public:
     // Human feedback functions
     void checkHumanFeedback();
     void checkButtonPress();
-    bool checkFeedbackTimeout();
+    bool checkUnpromptedActionTimeout();
     
     // Utility functions
     void printQTable();

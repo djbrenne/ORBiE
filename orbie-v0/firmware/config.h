@@ -27,3 +27,6 @@
 
 // Button timing
 #define DOUBLE_CLICK_TIME 300  // 300ms for double click detection (reduced from 500ms)
+
+// Agent definitions
+#define UNPROMPTED_ACTION_TIMEOUT 10000  // 10 seconds for unprompted action timeout
