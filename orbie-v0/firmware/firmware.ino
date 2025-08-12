@@ -1,35 +1,31 @@
 /*
- * Q-Learning with BNO055 IMU State and Human Feedback
+ * ORBiE v0 Firmware
  * 
  * This implements Q-learning where:
  * - States are determined by BNO055 IMU heading readings
  * - Actions are: left, right, forward (servo movements)
- * - Rewards come from human feedback via button: -1, 0, or +1
- * - Auto-assigns neutral reward (0) after 5 minutes of no feedback
- * 
- * Memory usage: ~300 bytes
- * 
+ * - Positive scalar rewards come from human feedback via button
+ * - If no button press is detected between actions, the reward is 0
+ * - Action/Learning steps are triggered by a human query or an internal timer
+ * - Double-clicking the button triggers a yes/no query.
+ *  
  * Hardware: BNO055 IMU, 2 servos, button, LED
- * Actions: 0=forward, 1=left, 2=right
+ * Actions: 0=forward/dunno, 1=left/no, 2=right/yes
  */
 
 #include "controller.h"
 #include "config.h"
 #include "learning.h"
 
-// Global controller instance (declared before the class that uses it)
+// Global controller instance
 Controller controller;
 
 // Global Q-learning instance
 QLearningOrbie q_agent;
 
 void setup() {
-  Serial.begin(SERIAL_BAUD_RATE);
-  delay(1000);
   // Initialize hardware
   controller.beginHardware();
-  controller.setLed(true);
-  controller.setNeutralPosition();  
 }
 
 void loop() {

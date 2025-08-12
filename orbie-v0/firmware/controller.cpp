@@ -6,6 +6,7 @@
 */
 
 #include "controller.h"
+#include "config.h"
 
 // Constructor
 Controller::Controller() {
@@ -24,6 +25,9 @@ Controller::Controller() {
 
 // Hardware initialization
 bool Controller::beginHardware() {
+    Serial.begin(SERIAL_BAUD_RATE);
+    delay(1000);
+    
     bool success = true;
     
     // Initialize button pin
@@ -38,16 +42,13 @@ bool Controller::beginHardware() {
     // Initialize servos
     rightServo.attach(rightServoPin);
     leftServo.attach(leftServoPin);
-    
-    // Set servos to center position
-    rightServo.write(rightServoAngle);
-    leftServo.write(leftServoAngle);
+    setNeutralPosition();  
     
     // Initialize I2C for IMU
     Wire.begin();
     
     // Initialize BNO055 IMU
-    if (!bno.begin(Adafruit_BNO055::OPERATION_MODE_NDOF)) {
+    if (!bno.begin()) {
         Serial.println("Failed to initialize BNO055 IMU");
         success = false;
     } else {
@@ -55,8 +56,7 @@ bool Controller::beginHardware() {
         
         // Wait for IMU to stabilize
         delay(1000);
-        
-        // Set up IMU for absolute orientation
+
         bno.setExtCrystalUse(true);
     }
     
