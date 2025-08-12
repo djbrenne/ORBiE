@@ -40,9 +40,10 @@ void loop() {
   q_agent.checkFeedbackTimeout();
   
   // Process learning step if reward is available
-  if (q_agent.hasQueryRequest()) {
-    // Only run learning step if (a) the time out has been reached, 
-    // or (b) the user has double clicked the button to query for a new action
+  if (q_agent.hasQueryRequest() && !controller.isButtonPressed()) {
+    // Only run learning step if the time out has been reached, 
+    // or the user has double clicked the button to query for a new action,
+    // and the button is not currently being held down (get ALL the rewards!)
     q_agent.runLearningStep();
     delay(1000);
   } else {
