@@ -21,3 +21,9 @@
 #define R_SERVO_MAX_ANGLE 170
 #define L_SERVO_MIN_ANGLE 10
 #define L_SERVO_MAX_ANGLE 170
+
+// Debounce delay
+#define DEBOUNCE_DELAY 20
+
+// Button timing
+#define DOUBLE_CLICK_TIME 300  // 300ms for double click detection (reduced from 500ms)

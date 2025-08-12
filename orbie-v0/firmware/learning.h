@@ -47,10 +47,8 @@ private:
     unsigned long feedback_wait_start;
     const unsigned long FEEDBACK_TIMEOUT = 10000;  // 5 minutes (300,000 ms) for feedback
     
-    // Button state tracking TODO: Double check this works
-    bool last_button_state;
-    unsigned long last_button_press_time;
-    const unsigned long DOUBLE_CLICK_TIME = 500;    // 500ms for double click detection
+    // Button state tracking (now handled by controller)
+    // Removed: last_button_state, last_button_press_time, DOUBLE_CLICK_TIME
 
 public:
     // Constructor

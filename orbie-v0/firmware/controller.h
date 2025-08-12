@@ -37,6 +37,25 @@ private:
     int rightServoAngle;
     int leftServoAngle;
     
+    // Button debouncing variables
+    bool lastButtonReading;
+    bool debouncedButtonState;
+    unsigned long lastDebounceTime;
+    
+    // Button event detection variables
+    bool lastButtonState;
+    bool buttonPressInProgress;
+    unsigned long buttonPressStartTime;
+    unsigned long doubleClickTimer;
+    bool doubleClickDetected;
+    float pendingReward;
+    // DOUBLE_CLICK_TIME is now defined in config.h
+    
+    // Interrupt-based button detection
+    static volatile bool buttonStateChanged;
+    static volatile unsigned long buttonStateChangeTime;
+    static volatile bool buttonInterruptState;
+    
     // IMU data
     sensors_event_t orientationData;
     sensors_event_t angVelData;
@@ -52,6 +71,13 @@ public:
     // Button functions
     bool isButtonPressed();
     bool wasButtonPressed();
+    
+    // Button event detection
+    struct ButtonEvent {
+        float reward;      // Reward accumulated from button press duration
+        bool query;        // True if double-click detected (query request)
+    };
+    ButtonEvent checkButtonEvents();  // Returns both reward and query status
     
     // Servo functions
     void setRightServo(int angle);
@@ -81,6 +107,9 @@ public:
     void update();
     void reset();
     void setNeutralPosition();
+    
+    // Interrupt service routine (must be static)
+    static void buttonISR();
 };
 
 #endif // CONTROLLER_H

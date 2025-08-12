@@ -20,8 +20,6 @@ QLearningOrbie::QLearningOrbie() {
     human_reward_sum = 0.0;
     query_requested = false;
     feedback_wait_start = 0;
-    last_button_state = false;
-    last_button_press_time = 0;
     
     // Initialize heading history to prevent random memory values
     heading_history[0] = 0;
@@ -420,42 +418,17 @@ void QLearningOrbie::checkHumanFeedback() {
 
 // Check for button press
 void QLearningOrbie::checkButtonPress() {
-    bool button_pressed = false;
+    // Get button events (reward and/or query)
+    Controller::ButtonEvent buttonEvent = controller.checkButtonEvents();
     
-    // Check if button is currently pressed
-    if (digitalRead(BUTTON_PIN) == LOW) {
-        button_pressed = true;
-        // While button is pressed, increment reward continuously
-        while (digitalRead(BUTTON_PIN) == LOW) {
-            human_reward_sum += 0.01;
-            delay(10);
-        }
+    // Add reward if any was accumulated
+    if (buttonEvent.reward > 0) {
+        human_reward_sum += buttonEvent.reward;
     }
     
-    // If button was pressed, check for double click
-    if (button_pressed) {
-        unsigned long button_release_time = millis();
-        bool double_click_detected = false;
-        
-        // Wait for potential second press within DOUBLE_CLICK_TIME
-        while (millis() - button_release_time < DOUBLE_CLICK_TIME) {
-            if (digitalRead(BUTTON_PIN) == LOW) {
-                // Second press detected - wait for it to be released
-                while (digitalRead(BUTTON_PIN) == LOW) {
-                    delay(10);
-                }
-                double_click_detected = true;
-                break;
-            }
-            delay(10); // Small delay to prevent busy waiting
-        }
-        
-        if (double_click_detected) {
-            query_requested = true;
-            Serial.println("Double click detected - requesting new action");
-        } else {
-            Serial.println("Single click - reward added");
-        }
+    // Set query request if double-click was detected
+    if (buttonEvent.query) {
+        query_requested = true;
     }
 }
 
