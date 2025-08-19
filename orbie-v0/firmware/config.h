@@ -17,10 +17,10 @@
 #define LED_BRIGHTNESS 255
 
 // Servo definitions
-#define R_SERVO_MIN_ANGLE 10
-#define R_SERVO_MAX_ANGLE 170
-#define L_SERVO_MIN_ANGLE 10
-#define L_SERVO_MAX_ANGLE 170
+#define R_SERVO_MIN_ANGLE 170
+#define R_SERVO_MAX_ANGLE 55
+#define L_SERVO_MIN_ANGLE 110
+#define L_SERVO_MAX_ANGLE 10
 
 // Debounce delay
 #define DEBOUNCE_DELAY 20
@@ -29,4 +29,5 @@
 #define DOUBLE_CLICK_TIME 300  // 300ms for double click detection (reduced from 500ms)
 
 // Agent definitions
-#define UNPROMPTED_ACTION_TIMEOUT 10000  // 10 seconds for unprompted action timeout
+#define UNPROMPTED_ACTION_TIMEOUT_MIN 6000  // 1 minute minimum for unprompted action timeout
+#define UNPROMPTED_ACTION_TIMEOUT_MAX 60000  // 10 minutes maximum for unprompted action timeout

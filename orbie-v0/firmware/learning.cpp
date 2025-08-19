@@ -29,6 +29,9 @@ QLearningOrbie::QLearningOrbie() {
     // Initialize Q-table with small random values
     randomSeed(analogRead(0));
     initializeQTable();
+
+    // Initialize unprompted action timeout interval
+    current_unprompted_timeout = random(UNPROMPTED_ACTION_TIMEOUT_MIN, UNPROMPTED_ACTION_TIMEOUT_MAX);
 }
 
 // Convert compass heading to discrete N, E, S, W state 
@@ -93,7 +96,7 @@ int QLearningOrbie::headingToState() {
     } else {
       // Best action (exploitation)
       Serial.println("Exploiting");
-      controller.setLedColor(255, 0, 0);
+      controller.setLedColor(0, 0, 255);
       return getBestAction(state);
     }
   }
@@ -273,8 +276,9 @@ void QLearningOrbie::resetTraining() {
     last_state = current_state;
     current_action = current_action;
     
-    // Start unprompted action timer
+    // Start unprompted action timer and set new random timeout
     unprompted_action_timer_start = current_time;
+    current_unprompted_timeout = random(UNPROMPTED_ACTION_TIMEOUT_MIN, UNPROMPTED_ACTION_TIMEOUT_MAX);
     
     // Reset reward flag and statistics
     impending_action = false;
@@ -347,8 +351,8 @@ void QLearningOrbie::resetTraining() {
 unsigned long QLearningOrbie::getRemainingUnpromptedActionTime() {
     if (impending_action) return 0;
     unsigned long elapsed = millis() - unprompted_action_timer_start;
-    if (elapsed >= UNPROMPTED_ACTION_TIMEOUT) return 0;
-    return UNPROMPTED_ACTION_TIMEOUT - elapsed;
+    if (elapsed >= current_unprompted_timeout) return 0;
+    return current_unprompted_timeout - elapsed;
 }
   
   // Print countdown timer
@@ -442,7 +446,7 @@ void QLearningOrbie::collectReward() {
 
 // Check if time for unprompted action
 bool QLearningOrbie::checkUnpromptedActionTimeout() {
-    if (!impending_action && millis() - unprompted_action_timer_start >= UNPROMPTED_ACTION_TIMEOUT) {
+    if (!impending_action && millis() - unprompted_action_timer_start >= current_unprompted_timeout) {
         impending_action = true;
         Serial.println("Unprompted action timeout!");
         return true;

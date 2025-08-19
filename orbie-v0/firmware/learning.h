@@ -45,6 +45,7 @@ private:
     float human_reward_sum;
     bool impending_action;
     unsigned long unprompted_action_timer_start;
+    unsigned long current_unprompted_timeout;
     
     // Button state tracking (now handled by controller)
     // Removed: last_button_state, last_button_press_time, DOUBLE_CLICK_TIME
