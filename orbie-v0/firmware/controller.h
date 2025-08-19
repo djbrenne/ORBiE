@@ -107,6 +107,11 @@ public:
     void update();
     void reset();
     void setNeutralPosition();
+
+    // Action functions
+    void goForward();
+    void turnLeft();
+    void turnRight();
     
     // Interrupt service routine (must be static)
     static void buttonISR();

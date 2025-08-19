@@ -272,12 +272,27 @@ void Controller::reset() {
 }
 
 void Controller::setNeutralPosition() {
-    setRightServo(170);
-    setLeftServo(10);
+    setRightServo(R_SERVO_MIN_ANGLE);
+    setLeftServo(L_SERVO_MAX_ANGLE);
     setLedColor(255, 255, 255);
 }
 
 void Controller::setLedColor(int r, int g, int b) {
     leds[0] = CRGB(r, g, b);
     FastLED.show();
+}
+
+void Controller::goForward() {
+    setRightServo(R_SERVO_MAX_ANGLE);
+    setLeftServo(L_SERVO_MIN_ANGLE);
+}
+
+void Controller::turnLeft() {
+    setRightServo(R_SERVO_MAX_ANGLE);
+    setLeftServo(L_SERVO_MAX_ANGLE);
+}
+
+void Controller::turnRight() {
+    setRightServo(R_SERVO_MIN_ANGLE);
+    setLeftServo(L_SERVO_MIN_ANGLE);
 }

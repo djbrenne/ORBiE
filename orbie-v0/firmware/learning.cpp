@@ -144,18 +144,15 @@ int QLearningOrbie::headingToState() {
     if (action == 0) {
       // Go forward
       Serial.println("Keep going straight");
-      controller.setRightServo(90);
-      controller.setLeftServo(90);
+      controller.goForward();
     } else if (action == 1) {
       // Turn left
       Serial.println("Take the next left turn");
-      controller.setRightServo(10);
-      controller.setLeftServo(10);
+      controller.turnLeft();
     } else {
       // Turn right
       Serial.println("Take the next right turn");
-      controller.setRightServo(170);
-      controller.setLeftServo(170);
+      controller.turnRight();
     }
     
     // Wait for action to complete
