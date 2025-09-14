@@ -29,5 +29,5 @@
 #define DOUBLE_CLICK_TIME 300  // 300ms for double click detection (reduced from 500ms)
 
 // Agent definitions
-#define UNPROMPTED_ACTION_TIMEOUT_MIN 6000  // 1 minute minimum for unprompted action timeout
-#define UNPROMPTED_ACTION_TIMEOUT_MAX 60000  // 10 minutes maximum for unprompted action timeout
+#define UNPROMPTED_ACTION_TIMEOUT_MIN 60000  // 1 minute minimum for unprompted action timeout
+#define UNPROMPTED_ACTION_TIMEOUT_MAX 600000  // 10 minutes maximum for unprompted action timeout
