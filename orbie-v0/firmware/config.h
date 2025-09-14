@@ -17,10 +17,10 @@
 #define LED_BRIGHTNESS 255
 
 // Servo definitions
-#define R_SERVO_MIN_ANGLE 170
-#define R_SERVO_MAX_ANGLE 55
-#define L_SERVO_MIN_ANGLE 110
-#define L_SERVO_MAX_ANGLE 10
+#define R_SERVO_MIN_ANGLE 125
+#define R_SERVO_MAX_ANGLE 25
+#define L_SERVO_MIN_ANGLE 145
+#define L_SERVO_MAX_ANGLE 50
 
 // Debounce delay
 #define DEBOUNCE_DELAY 20
