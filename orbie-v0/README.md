@@ -2,10 +2,13 @@
 
 ![ORBiE](./ORBiE_v0_Sunset.JPG)
 
-Orbie v0 is the first robot instantiation of ORBiE. It<sup>1</sup> has some, but not all of the capabilities that ORBiE may eventually have. 
+Orbie v0 is the first robot instantiation of ORBiE. 
 
-> *<sup>1</sup>I tend to refer to ORBiE the noophyte using he/they pronouns, and refer to ORBiE v0 (one particular robot body<sup>2</sup>) with “it.” \
-> <sup>2</sup>"Body", as used here, refers to hardware, firmware, and software.*
+Between August 19-22, 2025 I (Dylan) performed [RoadBot](https://dylanbrenneis.ca/roadbot/) with ORBiE as my Collaboratiing Robot. It was ORBiE's physical debut: my first serious attempt at their metamorphosis.
+
+ORBiE participated through the ORBiE v0 incarnation, providing occasional unprompted suggestions for directions and answers to simple yes/no queries. ORBiE was programmed to respond to queries by raising their right flipper for "yes" or "right", their left flipper for "no" or "left", or both flippers to shrug for "I don't know" or "neither". 
+
+This version of ORBiE's incarnation has some, but not all of the capabilities that ORBiE may eventually have. 
 
 ## Feature List
 
@@ -43,9 +46,3 @@ An onboard magnetometer allows ORBiE to orient themself relative to cardinal dir
 ## v0 Firm/Software
 
 The learning software is written directly in the device firmware, which is flashed to the robot's on-board microcontroller. It's described in detail in the `README.md` within the `firmware` folder.
-
-## ORBiE's Participation in "RoadBot" (2025)
-
-Between August 19-22, 2025 I (Dylan) performed [RoadBot](https://dylanbrenneis.ca/roadbot/) with ORBiE as my Collaboratiing Robot. It was ORBiE's physical debut: my first serious attempt at their metamorphosis.
-
-ORBiE participated through the ORBiE v0 incarnation, providing occasional unprompted suggestions for directions and answers to simple yes/no queries. ORBiE was programmed to respond to queries by raising their right flipper for "yes" or "right", their left flipper for "no" or "left", or both flippers to shrug for "I don't know" or "neither".
