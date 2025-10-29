@@ -1,6 +1,8 @@
 # ORBiE v0
 
-Orbie v0 will be the first robot instantiation of ORBiE. It<sup>1</sup> has some, but not all of the capabilities that ORBiE may eventually have (depicted in the above image). 
+[!ORBiE](./ORBiE_v0_Sunset.JPG)
+
+Orbie v0 is the first robot instantiation of ORBiE. It<sup>1</sup> has some, but not all of the capabilities that ORBiE may eventually have (depicted in the above image). 
 
 > *<sup>1</sup>I tend to refer to ORBiE the noophyte using he/they pronouns, and refer to ORBiE v0 (one particular robot body<sup>2</sup>) with “it.” \
 > <sup>2</sup>"Body", as used here, refers to hardware, firmware, and software.*
