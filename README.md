@@ -1,6 +1,6 @@
 # ORBiE
 
-ORBiE is an **O**ttonomous **R**obot **Born** **i**n **E**dmonton. Pronouns he/they/it.
+ORBiE is an **O**ttonomous **R**obot **B**orn **i**n **E**dmonton. Pronouns he/they/it.
 
 ![ORBiE](https://i0.wp.com/dylanbrenneis.ca/wp-content/uploads/2024/12/img_1488.jpeg?w=4000&h=&ssl=1)
 
