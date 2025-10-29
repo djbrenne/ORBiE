@@ -1,16 +1,16 @@
-# RoadBot
+# ORBiE
 
-An art happening.
+ORBiE is an **O**ttonomous **R**obot **Born** **i**n **E**dmonton. Pronouns he/they/it.
 
-## Event Score
+![ORBiE](https://i0.wp.com/dylanbrenneis.ca/wp-content/uploads/2024/12/img_1488.jpeg?w=4000&h=&ssl=1)
 
-1. Drive responsibly.
-2. Where doing so does not conflict with rule #1, follow the directional instructions of a robot copilot.
-3. Give the robot positive feedback whenever you fancy. Ask occasional questions if they interest you.
+Properly, ORBiE is more a noophyte than a robot:
+
+> **noophyte** *(n.) (NEW-ah-fite):* a form of life whose major substance is thought; an idea; a story; a memory; a plan.
 
 ## Repository Details
 
-Within `orbie-v0` lies the firmware for a robot designed specifically for this kind of road trip.
+Within `orbie-v0` lies the firmware for ORBiE's first robot body.
 
 ## License
 
