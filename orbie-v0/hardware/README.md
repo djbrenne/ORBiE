@@ -2,7 +2,7 @@
 
 Because I'm focusing on the development of my art as well as the continued development of ORBiE, the documentation for this project is not as clear and concise as I would like if I were thinking about this as a proper open-source project. However, in the spirit of dialogic engagement, I want to be as transparent as possible about what exactly is going on under the hood, and allow for the possibility of replication for anyone willing to try. I believe there is sufficient information to be found in spelunking this repository for a complete understanding of ORBiE's inner workings.
 
-The [OnShape model](https://cad.onshape.com/documents/164c73fede2165c6b4da80a4/w/bbb64eb84a7306682368cda2/e/b7de3651ef36f5c093f0d20b?renderMode=0&uiState=6902a177ad2acac884aaaa6e) can be used to understand the assembly of components and various parts (e.g. arms, chassis) can be exported for 3D printing. Note that the 3D model here is further developed than the physical build actually turned out to be (so far), so photos of ORBiE may not match this model.
+The [OnShape model](https://cad.onshape.com/documents/164c73fede2165c6b4da80a4/w/bbb64eb84a7306682368cda2/e/b7de3651ef36f5c093f0d20b?renderMode=0&uiState=690f6140278c0ff25805fa8a) can be used to understand the assembly of components and various parts (e.g. arms, chassis) can be exported for 3D printing. Note that the 3D model here is further developed than the physical build actually turned out to be (so far), so photos of ORBiE may not match this model.
 
 # Bill of Materials
 
