@@ -11,6 +11,7 @@
 #define R_SERVO_PIN 5
 #define L_SERVO_PIN 6
 #define BNO055_ADDRESS 0x55
+#define POTENTIOMETER_PIN A0
 
 // LED definitions
 #define LED_COUNT 1
@@ -28,6 +29,8 @@
 // Button timing
 #define DOUBLE_CLICK_TIME 300  // 300ms for double click detection (reduced from 500ms)
 
-// Agent definitions
-#define UNPROMPTED_ACTION_TIMEOUT_MIN 60000  // 1 minute minimum for unprompted action timeout
-#define UNPROMPTED_ACTION_TIMEOUT_MAX 600000  // 10 minutes maximum for unprompted action timeout
+// Agent definitions (values in seconds)
+#define UNPROMPTED_ACTION_TIMEOUT_MIN 1.0  // 1 second minimum for unprompted action timeout (lower bound at pot=0)
+#define UNPROMPTED_ACTION_TIMEOUT_MAX 3600.0 // 1 hour maximum for unprompted action timeout (upper bound at pot=1)
+#define UNPROMPTED_ACTION_TIMEOUT_L_MAX 1800.0  // 15 minutes - maximum for lower bound (at pot=1)
+#define UNPROMPTED_ACTION_TIMEOUT_U_MIN 5.0  // 5 seconds - minimum for upper bound (at pot=0)
