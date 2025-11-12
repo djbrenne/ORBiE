@@ -30,8 +30,8 @@ QLearningOrbie::QLearningOrbie() {
     randomSeed(analogRead(0));
     initializeQTable();
 
-    // Initialize unprompted action timeout interval
-    current_unprompted_timeout = random(UNPROMPTED_ACTION_TIMEOUT_MIN, UNPROMPTED_ACTION_TIMEOUT_MAX);
+    // Initialize unprompted action timeout interval (based on potentiometer)
+    current_unprompted_timeout = controller.calculateUnpromptedActionTimeout();
 }
 
 // Convert compass heading to discrete N, E, S, W state 
@@ -273,9 +273,9 @@ void QLearningOrbie::resetTraining() {
     last_state = current_state;
     current_action = current_action;
     
-    // Start unprompted action timer and set new random timeout
+    // Start unprompted action timer and set new timeout (based on potentiometer)
     unprompted_action_timer_start = current_time;
-    current_unprompted_timeout = random(UNPROMPTED_ACTION_TIMEOUT_MIN, UNPROMPTED_ACTION_TIMEOUT_MAX);
+    current_unprompted_timeout = controller.calculateUnpromptedActionTimeout();
     
     // Reset reward flag and statistics
     impending_action = false;

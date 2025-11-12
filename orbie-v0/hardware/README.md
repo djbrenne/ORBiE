@@ -16,6 +16,7 @@ The [OnShape model](https://cad.onshape.com/documents/164c73fede2165c6b4da80a4/w
 - 0.1 uF ceramic capacitors
 - 1N5817 diodes
 - Breadboard
+- Potentiometer
 
 # Wiring
 

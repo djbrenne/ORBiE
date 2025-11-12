@@ -24,12 +24,14 @@ private:
     Servo leftServo;
     Adafruit_BNO055 bno;
     CRGB leds[LED_COUNT];
+    int potentiometerValue;
     
     // Pin assignments
     uint8_t buttonPin;
     uint8_t ledPin;
     uint8_t rightServoPin;
     uint8_t leftServoPin;
+    uint8_t potentiometerPin;
     
     // State variables
     bool buttonPressed;
@@ -112,6 +114,11 @@ public:
     void goForward();
     void turnLeft();
     void turnRight();
+    
+    // Potentiometer functions
+    float getPotentiometerValue();
+    unsigned long calculateUnpromptedActionTimeout();
+    void getTimeoutBounds(float& L, float& U);  // Get calculated L and U bounds for testing
     
     // Interrupt service routine (must be static)
     static void buttonISR();

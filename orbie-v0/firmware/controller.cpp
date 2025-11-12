@@ -20,6 +20,7 @@ Controller::Controller() {
     ledPin = LED_PIN;
     rightServoPin = R_SERVO_PIN;
     leftServoPin = L_SERVO_PIN;
+    potentiometerPin = POTENTIOMETER_PIN;
     
     // Initialize state variables
     buttonPressed = false;
@@ -70,6 +71,9 @@ bool Controller::beginHardware() {
     rightServo.attach(rightServoPin);
     leftServo.attach(leftServoPin);
     setNeutralPosition();  
+    
+    // Initialize potentiometer pin
+    pinMode(potentiometerPin, INPUT);
     
     // Initialize I2C for IMU
     Wire.begin();
@@ -295,4 +299,42 @@ void Controller::turnLeft() {
 void Controller::turnRight() {
     setRightServo(R_SERVO_MIN_ANGLE);
     setLeftServo(L_SERVO_MIN_ANGLE);
+}
+
+// Potentiometer functions
+float Controller::getPotentiometerValue() {
+    // Read analog value (0-1023) and normalize to 0.0-1.0
+    int rawValue = analogRead(potentiometerPin);
+    return constrain(rawValue / 1023.0, 0.0, 1.0);
+}
+
+void Controller::getTimeoutBounds(float& L, float& U) {
+    // Get normalized potentiometer value (0.0 to 1.0)
+    float pot = getPotentiometerValue();
+    
+    // Get config values (already in seconds)
+    float L_min = UNPROMPTED_ACTION_TIMEOUT_MIN;  // Lower bound minimum (at pot=0)
+    float L_max = UNPROMPTED_ACTION_TIMEOUT_L_MAX;  // Lower bound maximum (at pot=1)
+    float U_min = UNPROMPTED_ACTION_TIMEOUT_U_MIN;  // Upper bound minimum (at pot=0)
+    float U_max = UNPROMPTED_ACTION_TIMEOUT_MAX;  // Upper bound maximum (at pot=1)
+    
+    // Calculate the power base for exponential interpolation
+    // L = L_min * pow(L_max/L_min, pot)  // L_min → L_max
+    // U = U_min * pow(U_max/U_min, pot)   // U_min → U_max
+    L = L_min * pow(L_max / L_min, pot);
+    U = U_min * pow(U_max / U_min, pot);
+}
+
+unsigned long Controller::calculateUnpromptedActionTimeout() {
+    // Get calculated bounds
+    float L, U;
+    getTimeoutBounds(L, U);
+    
+    // Sample log-uniform: t = exp( ln(L) + u * (ln(U) - ln(L)) )
+    // where u is a uniform random value between 0 and 1
+    float u = random(0, 10000) / 10000.0;  // Random value 0.0-1.0
+    float t_seconds = exp(log(L) + u * (log(U) - log(L)));
+    
+    // Convert to milliseconds and return
+    return (unsigned long)(t_seconds * 1000.0);
 }
